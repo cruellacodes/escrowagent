@@ -1,0 +1,23 @@
+{
+  "name": "@agentvault/sdk",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for AgentVault — escrow & SLA layer for agent-to-agent transactions on Solana",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run build"
+  },
+  "files": ["dist/"],
+  "keywords": ["solana", "escrow", "agents", "sla", "web3"],
+  "license": "MIT",
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.32.1",
+    "@solana/web3.js": "^1.95.0",
+    "@solana/spl-token": "^0.4.9"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
