@@ -8,7 +8,7 @@ pub mod state;
 use instructions::*;
 use state::enums::*;
 
-declare_id!("AgntVLT1111111111111111111111111111111111111");
+declare_id!("8rXSN62qT7hb3DkcYrMmi6osPxak7nhXi2cBGDNbh7Py");
 
 #[program]
 pub mod agentvault {

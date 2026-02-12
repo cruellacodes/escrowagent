@@ -1,0 +1,20 @@
+{
+  "name": "agentvault",
+  "version": "0.1.0",
+  "description": "AgentVault CLI — trustless escrow for autonomous AI agents on Solana",
+  "bin": {
+    "agentvault": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "files": ["dist/", "templates/"],
+  "keywords": ["solana", "escrow", "agents", "ai-agents", "mcp", "langchain", "skills"],
+  "license": "MIT",
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.32.1",
+    "@solana/web3.js": "^1.95.0",
+    "@solana/spl-token": "^0.4.9"
+  }
+}

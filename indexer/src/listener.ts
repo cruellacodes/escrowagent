@@ -9,7 +9,7 @@ import * as db from "./db";
 // ──────────────────────────────────────────────────────
 
 const PROGRAM_ID = new PublicKey(
-  process.env.PROGRAM_ID || "AgntVLT1111111111111111111111111111111111111"
+  process.env.PROGRAM_ID || "8rXSN62qT7hb3DkcYrMmi6osPxak7nhXi2cBGDNbh7Py"
 );
 
 // Load IDL from Anchor build output
@@ -162,11 +162,13 @@ export class EventListener {
     const providerAddress = (
       data.provider as { toBase58: () => string }
     ).toBase58();
-    const amount = data.amount as number;
-    const tokenMint = (data.token_mint as { toBase58: () => string }).toBase58();
-    const deadline = data.deadline as number;
-    const taskHashBytes = data.task_hash as number[];
-    const verificationType = data.verification_type as Record<string, unknown>;
+    const amount = Number(String(data.amount));
+    const tokenMint = (data.tokenMint as { toBase58: () => string })?.toBase58() 
+      || (data.token_mint as { toBase58: () => string })?.toBase58()
+      || String(data.tokenMint || data.token_mint);
+    const deadline = Number(String(data.deadline));
+    const taskHashBytes = (data.taskHash || data.task_hash) as number[];
+    const verificationType = (data.verificationType || data.verification_type) as Record<string, unknown>;
 
     const taskHash = Buffer.from(taskHashBytes).toString("hex");
     const verificationTypeStr = extractVerificationType(verificationType);
@@ -188,8 +190,8 @@ export class EventListener {
         arbitratorAddress = escrowAccount.arbitrator
           ? (escrowAccount.arbitrator as { toBase58: () => string }).toBase58()
           : undefined;
-        gracePeriod = Number(escrowAccount.grace_period ?? 300);
-        protocolFeeBps = Number(escrowAccount.protocol_fee_bps ?? 50);
+        gracePeriod = Number(String(escrowAccount.gracePeriod ?? escrowAccount.grace_period ?? 300));
+        protocolFeeBps = Number(escrowAccount.protocolFeeBps ?? escrowAccount.protocol_fee_bps ?? 50);
       }
     } catch (err) {
       console.warn(

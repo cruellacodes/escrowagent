@@ -3,7 +3,7 @@ import { PublicKey } from "@solana/web3.js";
 
 /** The deployed AgentVault program ID */
 export const PROGRAM_ID = new PublicKey(
-  "AgntVLT1111111111111111111111111111111111111"
+  "8rXSN62qT7hb3DkcYrMmi6osPxak7nhXi2cBGDNbh7Py"
 );
 
 /** Well-known USDC mint on Solana mainnet */

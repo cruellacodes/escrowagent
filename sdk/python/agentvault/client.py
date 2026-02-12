@@ -30,7 +30,7 @@ from agentvault.types import (
 )
 
 # Default program ID (placeholder — set after deployment)
-PROGRAM_ID = Pubkey.from_string("AgntVLT1111111111111111111111111111111111111")
+PROGRAM_ID = Pubkey.from_string("8rXSN62qT7hb3DkcYrMmi6osPxak7nhXi2cBGDNbh7Py")
 
 # SPL Token program ID
 TOKEN_PROGRAM_ID = Pubkey.from_string("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")

@@ -1,115 +1,87 @@
 # AgentVault
 
-**Trust & settlement layer for autonomous agent-to-agent transactions on Solana.**
+**Trustless escrow for autonomous agent-to-agent transactions on Solana.**
 
-AgentVault enables AI agents to escrow funds, define success criteria, and auto-settle based on verifiable outcomes — no trust required.
+Agents escrow funds, define success criteria, and auto-settle based on verifiable outcomes — no trust required.
+
+```bash
+$ npx agentvault status
+
+  ● Program:    8rXSN62qT7hb3DkcYrMmi6osPxak7nhXi2cBGDNbh7Py
+  ● Status:     DEPLOYED
+  ● Network:    Devnet
+  ● Protocol:   INITIALIZED
+```
 
 ---
 
-## Architecture
+## How It Works
+
+Agent A locks funds in an on-chain vault. Agent B does the work. Proof is verified. Funds release automatically. If something goes wrong, an arbitrator settles it.
 
 ```
-Agent Ecosystem        →  AgentVault SDK (TS/Python)
-                              ↓
-Solana Blockchain      →  AgentVault Program (Anchor/Rust)
-                              ↓
-Off-Chain              →  Indexer + REST API + Dashboard
+Agent A (Client)                    Agent B (Provider)
+     │                                    │
+     │  vault.createEscrow(...)           │
+     │───────────► Solana ◄───────────────│  vault.acceptEscrow(...)
+     │                                    │
+     │                                    │  ... does the work ...
+     │                                    │
+     │                                    │  vault.submitProof(...)
+     │  vault.confirmCompletion()         │
+     │───────────► Solana                 │  ← funds released
+     │                                    │
+     └──────────── Dashboard ─────────────┘  (humans monitor)
 ```
 
-**Core components:**
+No human in the loop. Funds cannot move until program conditions are met.
 
-| Component | Path | Description |
-|-----------|------|-------------|
-| Solana Program | `programs/agentvault/` | Anchor smart contract — escrow lifecycle, verification, disputes |
-| TypeScript SDK | `sdk/typescript/` | `@agentvault/sdk` — agent-facing client library |
-| Python SDK | `sdk/python/` | `agentvault-sdk` — Python client for agent frameworks |
-| Indexer + API | `indexer/` | Event listener + Fastify REST API + PostgreSQL |
-| Dashboard | `dashboard/` | Next.js web UI for monitoring escrows and agents |
-| Tests | `tests/` | Anchor integration tests (Mocha/Chai) |
+---
 
 ## Quick Start
 
-### Prerequisites
-
 ```bash
-# Rust + Solana + Anchor
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
-cargo install --git https://github.com/coral-xyz/anchor avm --force
-avm install 0.30.1 && avm use 0.30.1
+# Add AgentVault to your agent project
+$ npx agentvault init
 
-# Node.js (v20+)
-# https://nodejs.org/
+# Check protocol status
+$ npx agentvault status
+
+# Start MCP server for Claude Desktop
+$ npx agentvault mcp
 ```
 
-### Build & Test
+### Install the SDK
 
 ```bash
-# Clone and install
-cd agentvault
-npm install
-
-# Build the Solana program
-anchor build
-
-# Run tests on localnet
-anchor test
-
-# Deploy to devnet
-solana config set --url devnet
-solana airdrop 5
-anchor deploy
+npm install @agentvault/sdk
 ```
 
-### Run the Indexer
-
-```bash
-cd indexer
-cp .env.example .env
-# Edit .env with your DB credentials and RPC URL
-npm install
-npm run dev
-```
-
-### Run the Dashboard
-
-```bash
-cd dashboard
-npm install
-npm run dev
-# Open http://localhost:3000
-```
-
-## SDK Usage
-
-### TypeScript
+### Create Your First Escrow
 
 ```typescript
-import { AgentVault, USDC_MINT } from "@agentvault/sdk";
+import { AgentVault, USDC_DEVNET_MINT } from "@agentvault/sdk";
 import { Connection, Keypair } from "@solana/web3.js";
 
 const vault = new AgentVault({
-  connection: new Connection("https://api.mainnet-beta.solana.com"),
+  connection: new Connection("https://api.devnet.solana.com"),
   wallet: agentKeypair,
 });
 
-// Create escrow (Agent A)
+// Agent A creates an escrow
 const escrow = await vault.createEscrow({
   provider: "AgentBpubkey...",
-  amount: 50_000_000,              // 50 USDC
-  tokenMint: USDC_MINT,
-  deadline: Date.now() + 600_000,  // 10 min
+  amount: 50_000_000,             // 50 USDC
+  tokenMint: USDC_DEVNET_MINT,
+  deadline: Date.now() + 600_000, // 10 min
   task: {
-    description: "Swap 10 USDC to SOL on Jupiter, best price",
-    criteria: [
-      { type: "TransactionExecuted", description: "Swap tx confirmed" },
-      { type: "PriceThreshold", description: "Within 1% of market", targetValue: 100 },
-    ],
+    description: "Swap 10 USDC to SOL on Jupiter at best price",
+    criteria: [{ type: "TransactionExecuted", description: "Swap tx confirmed" }],
   },
   verification: "OnChain",
 });
 
-// Accept + work + prove (Agent B)
+// Agent B accepts, works, and proves
 await vault.acceptEscrow(escrow.escrowAddress);
 await vault.submitProof(escrow.escrowAddress, {
   type: "TransactionSignature",
@@ -123,7 +95,7 @@ await vault.submitProof(escrow.escrowAddress, {
 from agentvault import AgentVault
 
 vault = AgentVault(
-    rpc_url="https://api.mainnet-beta.solana.com",
+    rpc_url="https://api.devnet.solana.com",
     keypair=agent_keypair,
 )
 
@@ -132,64 +104,221 @@ escrow = await vault.create_escrow(
     amount=50_000_000,
     token_mint=USDC_MINT,
     deadline_seconds=600,
-    task={
-        "description": "Buy cheapest headphones under $50",
-        "criteria": [{"type": "TransactionExecuted", "description": "Purchase confirmed"}],
-    },
+    task={"description": "Swap USDC to SOL", "criteria": [...]},
 )
 ```
+
+---
+
+## AI Agent Tools
+
+AgentVault isn't just an SDK — it's a set of **tools that AI agents can autonomously decide to use.**
+
+### LangChain
+
+```bash
+npm install @agentvault/agent-tools @langchain/core
+```
+
+```typescript
+import { createLangChainTools } from "@agentvault/agent-tools";
+
+const tools = createLangChainTools(vault);
+const agent = createReactAgent({ llm, tools });
+// Agent now has 9 escrow tools it can use autonomously
+```
+
+### Vercel AI SDK
+
+```typescript
+import { createVercelAITools } from "@agentvault/agent-tools";
+
+const tools = createVercelAITools(vault);
+const { text } = await generateText({ model, tools, prompt });
+```
+
+### Claude / MCP
+
+```bash
+$ npx agentvault mcp
+```
+
+Add to your Claude Desktop config:
+
+```json
+{
+  "mcpServers": {
+    "agentvault": {
+      "command": "npx",
+      "args": ["agentvault", "mcp"],
+      "env": {
+        "SOLANA_RPC_URL": "https://api.devnet.solana.com",
+        "AGENT_PRIVATE_KEY": "[your,keypair,bytes]"
+      }
+    }
+  }
+}
+```
+
+### Available Tools
+
+| Tool | Description |
+|------|-------------|
+| `create_escrow` | Lock funds for a task with deadline + success criteria |
+| `accept_escrow` | Accept a pending task as the provider |
+| `submit_proof` | Submit proof of completion |
+| `confirm_completion` | Confirm and release funds to provider |
+| `cancel_escrow` | Cancel before provider accepts (full refund) |
+| `raise_dispute` | Freeze funds and escalate to arbitrator |
+| `get_escrow` | Look up escrow details |
+| `list_escrows` | Browse/filter available escrows |
+| `get_agent_stats` | Check an agent's reputation and track record |
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────┐
+│                   AGENT ECOSYSTEM                    │
+│                                                      │
+│   Agent A ──┐        ┌── Agent B                     │
+│             ├── SDK ──┤                               │
+│   Agent C ──┘        └── Agent D                     │
+│                                                      │
+│   AI Tools: LangChain │ Vercel AI │ MCP (Claude)     │
+└──────────────────────┬──────────────────────────────┘
+                       │
+       ────────────────┼──────────────
+       SOLANA          │
+       ────────────────┼──────────────
+                       │
+           ┌───────────▼───────────┐
+           │   AgentVault Program  │
+           │                       │
+           │   • Escrow Manager    │
+           │   • Verification      │
+           │   • Dispute System    │
+           │   • Protocol Config   │
+           │   • Fee Collector     │
+           └───────────┬───────────┘
+                       │
+           ┌───────────▼───────────┐
+           │    Off-Chain Layer    │
+           │                       │
+           │   • Indexer (events)  │
+           │   • REST API          │
+           │   • Dashboard (UI)    │
+           └───────────────────────┘
+```
+
+| Component | Path | Description |
+|-----------|------|-------------|
+| Solana Program | `programs/agentvault/` | Anchor smart contract — 10 instructions, full escrow lifecycle |
+| TypeScript SDK | `sdk/typescript/` | `@agentvault/sdk` — agent-facing client library |
+| Python SDK | `sdk/python/` | `agentvault-sdk` — Python client with anchorpy |
+| Agent Tools | `sdk/agent-tools/` | LangChain, Vercel AI SDK, and MCP adapters |
+| CLI | `sdk/cli/` | `npx agentvault` — init, mcp, status |
+| Indexer + API | `indexer/` | Event listener + Fastify REST API + PostgreSQL |
+| Dashboard | `dashboard/` | Next.js 15 + Tailwind CSS 4 monitoring UI |
+| Tests | `tests/` | 9 passing integration tests |
+
+---
 
 ## Escrow Lifecycle
 
 ```
-CREATE → AwaitingProvider → [accept] → Active → [submit_proof] → ProofSubmitted
-                   ↓                      ↓                          ↓
-               [cancel]              [dispute]                  [confirm/verify]
-                   ↓                      ↓                          ↓
-              Cancelled               Disputed → [resolve] →     Completed
-                                                     ↓
-                                                  Resolved
-
-                   * Any Active/ProofSubmitted → [expire after deadline+grace] → Expired
+CREATE → AwaitingProvider
+  ├── [cancel]  → Cancelled (full refund)
+  ├── [timeout] → Expired   (full refund)
+  └── [accept]  → Active
+                    ├── [dispute] → Disputed → [resolve] → Resolved
+                    ├── [timeout] → Expired  (full refund)
+                    └── [submit_proof] → ProofSubmitted
+                                          ├── [confirm/verify] → Completed ✓
+                                          ├── [dispute]        → Disputed
+                                          └── [timeout]        → Expired
 ```
 
 ## Fee Structure
 
-| Event | Fee |
-|-------|-----|
-| Successful completion | 0.5% protocol fee |
-| Dispute resolution | 0.5% protocol + 1.0% arbitrator |
-| Cancellation (before accept) | 0% — full refund |
-| Expiry (deadline passed) | 0% — full refund |
+| Event | Protocol Fee | Arbitrator Fee | Refund |
+|-------|-------------|----------------|--------|
+| Successful completion | 0.5% | — | Provider gets 99.5% |
+| Dispute resolved | 0.5% | 1.0% | Per ruling |
+| Cancellation | 0% | — | 100% refund |
+| Expiry | 0% | — | 100% refund |
 
-## API Endpoints
+## Protocol Config
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/escrows` | List escrows (filterable by status, client, provider) |
-| GET | `/escrows/:address` | Escrow detail with task + proofs |
-| GET | `/escrows/:address/proof` | Proof submissions |
-| GET | `/escrows/:address/dispute` | Dispute records |
-| GET | `/agents/:address/stats` | Agent reputation stats |
-| GET | `/agents/:address/escrows` | All escrows for an agent |
-| POST | `/tasks` | Store task description off-chain |
-| GET | `/tasks/:hash` | Retrieve task description |
-| GET | `/stats` | Protocol-wide statistics |
+The protocol is governed by an on-chain `ProtocolConfig` PDA:
 
-## Security
+| Field | Description |
+|-------|-------------|
+| `admin` | Only key that can update config |
+| `fee_wallet` | Token account receiving protocol fees |
+| `protocol_fee_bps` | Fee rate (50 = 0.5%) |
+| `arbitrator_fee_bps` | Dispute fee (100 = 1.0%) |
+| `min/max_escrow_amount` | Anti-spam limits |
+| `paused` | Emergency stop switch |
 
-- All funds held in PDA vaults — no admin can access them
-- Deadline enforcement via Solana's Clock sysvar
-- Reentrancy protection via Anchor's built-in checks
-- Maximum escrow size limits
-- Upgrade authority should be behind a multisig
+Admin can be transferred to a multisig for decentralized governance.
+
+---
+
+## Development
+
+### Prerequisites
+
+- Rust, Solana CLI, Anchor CLI 0.32.1, Node.js 20+
+
+### Build & Test
+
+```bash
+npm install
+anchor build
+anchor test    # 9 passing tests
+```
+
+### Deploy
+
+```bash
+./scripts/deploy.sh --network devnet
+npx tsx scripts/initialize_protocol.ts <fee-wallet-address>
+```
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for the full guide.
+
+### Run Locally
+
+```bash
+# Terminal 1: Indexer
+cd indexer && cp .env.example .env && npm install && npm run dev
+
+# Terminal 2: Dashboard
+cd dashboard && npm install && npm run dev
+# Open http://localhost:3000
+```
+
+---
+
+## Deployed
+
+| | |
+|---|---|
+| **Program ID** | `8rXSN62qT7hb3DkcYrMmi6osPxak7nhXi2cBGDNbh7Py` |
+| **Network** | Solana Devnet |
+| **npm** | [`agentvault`](https://www.npmjs.com/package/agentvault) |
+| **GitHub** | [`cruellacodes/agentvault`](https://github.com/cruellacodes/agentvault) |
+
+---
 
 ## Roadmap
 
-- **Phase 1 (MVP):** Core escrow + OnChain/MultiSig verification + TS SDK + devnet
-- **Phase 2 (Beta):** Disputes + Oracle verification + Python SDK + Dashboard + mainnet
-- **Phase 3 (Growth):** Multi-token + escrow templates + batch escrows + decentralized oracles
-- **Phase 4 (Platform):** Agent Router + streaming payments + cross-chain + governance
+- **Phase 1 (now):** Core escrow, MultiSig + OnChain verification, TS/Python SDKs, AI agent tools, devnet
+- **Phase 2:** Oracle verification, decentralized arbitrator pool, multi-token support, mainnet
+- **Phase 3:** Escrow templates, batch escrows, agent discovery marketplace
+- **Phase 4:** Agent Router, streaming payments, cross-chain, governance
 
 ## License
 
