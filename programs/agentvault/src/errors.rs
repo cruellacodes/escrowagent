@@ -96,4 +96,26 @@ pub enum AgentVaultError {
 
     #[msg("Escrow amount exceeds the maximum allowed")]
     AboveMaximumAmount,
+
+    // ── Security audit fixes ──
+    #[msg("Client and provider cannot be the same address")]
+    SelfEscrow,
+
+    #[msg("Arbitrator cannot be the client or provider")]
+    ArbitratorConflict,
+
+    #[msg("Grace period is below the minimum required")]
+    GracePeriodTooShort,
+
+    #[msg("Deadline exceeds maximum allowed duration")]
+    DeadlineTooFar,
+
+    #[msg("Confirmation period expired, provider can self-release")]
+    ConfirmationTimeout,
+
+    #[msg("Auto-release delay has not elapsed yet")]
+    AutoReleaseNotReady,
+
+    #[msg("Dispute has timed out, default resolution applies")]
+    DisputeTimeout,
 }

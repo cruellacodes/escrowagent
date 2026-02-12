@@ -3,7 +3,8 @@ use anchor_lang::prelude::*;
 // ──────────────────────────────────────────────────────
 // Protocol Config — singleton PDA, initialized once by admin
 //
-// Stores the protocol fee wallet, fee rates, and admin authority.
+// Stores the protocol fee authority, fee rates, and admin authority.
+// Fee token accounts are derived as ATAs per mint at runtime.
 // Every instruction that moves fees validates against this config.
 // ──────────────────────────────────────────────────────
 
@@ -12,8 +13,8 @@ pub struct ProtocolConfig {
     /// The admin authority — can update config, transfer authority
     pub admin: Pubkey,
 
-    /// The token account that receives protocol fees
-    pub fee_wallet: Pubkey,
+    /// The wallet (authority) that receives protocol fees — fee ATAs derived per mint
+    pub fee_authority: Pubkey,
 
     /// Protocol fee in basis points (e.g., 50 = 0.5%)
     pub protocol_fee_bps: u16,
@@ -27,6 +28,12 @@ pub struct ProtocolConfig {
     /// Maximum escrow amount (0 = no limit)
     pub max_escrow_amount: u64,
 
+    /// Minimum grace period in seconds (default 300 = 5 min)
+    pub min_grace_period: i64,
+
+    /// Maximum deadline offset in seconds from creation (default 604800 = 7 days)
+    pub max_deadline_seconds: i64,
+
     /// Whether the protocol is paused (emergency stop)
     pub paused: bool,
 
@@ -37,14 +44,16 @@ pub struct ProtocolConfig {
 impl ProtocolConfig {
     pub const LEN: usize = 8   // discriminator
         + 32                    // admin
-        + 32                    // fee_wallet
+        + 32                    // fee_authority
         + 2                     // protocol_fee_bps
         + 2                     // arbitrator_fee_bps
         + 8                     // min_escrow_amount
         + 8                     // max_escrow_amount
+        + 8                     // min_grace_period
+        + 8                     // max_deadline_seconds
         + 1                     // paused
         + 1                     // bump
-        + 64;                   // padding for future fields
+        + 48;                   // padding for future fields
 
     /// The PDA seed — only one config account per program
     pub const SEED: &'static [u8] = b"protocol_config";

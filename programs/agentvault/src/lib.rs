@@ -19,22 +19,26 @@ pub mod agentvault {
     // ──────────────────────────────────────────────────────
 
     /// Initialize the protocol config. Called once by the deployer.
-    /// Sets the fee wallet, fee rates, escrow limits, and admin authority.
+    /// Sets the fee authority, fee rates, escrow limits, and admin authority.
     pub fn initialize_protocol(
         ctx: Context<InitializeProtocol>,
-        fee_wallet: Pubkey,
+        fee_authority: Pubkey,
         protocol_fee_bps: u16,
         arbitrator_fee_bps: u16,
         min_escrow_amount: u64,
         max_escrow_amount: u64,
+        min_grace_period: i64,
+        max_deadline_seconds: i64,
     ) -> Result<()> {
         instructions::initialize_config::handler(
             ctx,
-            fee_wallet,
+            fee_authority,
             protocol_fee_bps,
             arbitrator_fee_bps,
             min_escrow_amount,
             max_escrow_amount,
+            min_grace_period,
+            max_deadline_seconds,
         )
     }
 
@@ -79,7 +83,8 @@ pub mod agentvault {
     }
 
     /// Provider submits proof of task completion.
-    /// Fee account is validated against the protocol config.
+    /// Proof is stored and status moves to ProofSubmitted.
+    /// No funds are transferred at this stage.
     pub fn submit_proof(
         ctx: Context<SubmitProof>,
         proof_type: ProofType,
@@ -88,8 +93,8 @@ pub mod agentvault {
         instructions::submit_proof::handler(ctx, proof_type, proof_data)
     }
 
-    /// Client confirms task completion (MultiSig verification).
-    /// Fee account is validated against the protocol config.
+    /// Client confirms task completion (MultiSig / OnChain verification).
+    /// Releases funds to provider and collects protocol fee.
     pub fn confirm_completion(ctx: Context<ConfirmCompletion>) -> Result<()> {
         instructions::confirm::handler(ctx)
     }
@@ -101,9 +106,17 @@ pub mod agentvault {
     }
 
     /// Anyone can expire an escrow after deadline + grace period.
+    /// Only Active or AwaitingProvider — ProofSubmitted is protected.
     /// Full refund to client, no fee.
     pub fn expire_escrow(ctx: Context<ExpireEscrow>) -> Result<()> {
         instructions::expire::handler(ctx)
+    }
+
+    /// Provider self-releases funds after confirmation timeout.
+    /// Available when status is ProofSubmitted and grace period
+    /// has elapsed since proof submission without dispute.
+    pub fn provider_release(ctx: Context<ProviderRelease>) -> Result<()> {
+        instructions::provider_release::handler(ctx)
     }
 
     // ──────────────────────────────────────────────────────

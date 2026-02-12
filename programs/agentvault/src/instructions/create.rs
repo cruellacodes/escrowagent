@@ -90,16 +90,46 @@ pub fn handler(
 ) -> Result<()> {
     let config = &ctx.accounts.config;
 
+    // ── L-3: Prevent self-escrow ──
+    require!(
+        ctx.accounts.client.key() != ctx.accounts.provider.key(),
+        AgentVaultError::SelfEscrow
+    );
+
+    // ── H-3: Prevent arbitrator collusion (only when arbitrator is assigned) ──
+    let arbitrator_key = ctx.accounts.arbitrator.key();
+    if arbitrator_key != Pubkey::default() {
+        require!(
+            arbitrator_key != ctx.accounts.client.key()
+                && arbitrator_key != ctx.accounts.provider.key(),
+            AgentVaultError::ArbitratorConflict
+        );
+    }
+
     // ── Validate inputs against protocol config ──
-    require!(amount >= config.min_escrow_amount, AgentVaultError::BelowMinimumAmount);
     require!(amount > 0, AgentVaultError::AmountZero);
+    require!(amount >= config.min_escrow_amount, AgentVaultError::BelowMinimumAmount);
     if config.max_escrow_amount > 0 {
         require!(amount <= config.max_escrow_amount, AgentVaultError::AboveMaximumAmount);
     }
 
     let clock = Clock::get()?;
     require!(deadline > clock.unix_timestamp, AgentVaultError::DeadlineInPast);
+
+    // ── I-3: Deadline must be within max_deadline_seconds from now ──
+    if config.max_deadline_seconds > 0 {
+        require!(
+            deadline <= clock.unix_timestamp + config.max_deadline_seconds,
+            AgentVaultError::DeadlineTooFar
+        );
+    }
+
+    // ── M-3: Grace period must meet protocol minimum ──
     require!(grace_period >= 0, AgentVaultError::InvalidGracePeriod);
+    require!(
+        grace_period >= config.min_grace_period,
+        AgentVaultError::GracePeriodTooShort
+    );
 
     // ── Transfer tokens from client to escrow vault ──
     let transfer_ctx = CpiContext::new(
@@ -116,7 +146,7 @@ pub fn handler(
     let escrow = &mut ctx.accounts.escrow;
     escrow.client = ctx.accounts.client.key();
     escrow.provider = ctx.accounts.provider.key();
-    escrow.arbitrator = ctx.accounts.arbitrator.key();
+    escrow.arbitrator = arbitrator_key;
     escrow.token_mint = ctx.accounts.token_mint.key();
     escrow.escrow_vault = ctx.accounts.escrow_vault.key();
     escrow.amount = amount;
@@ -133,8 +163,6 @@ pub fn handler(
     escrow.proof_data = [0u8; 64];
     escrow.proof_submitted_at = 0;
     escrow.dispute_raised_by = Pubkey::default();
-    escrow.client_escrow_count = 0;
-    escrow.provider_escrow_count = 0;
     escrow.bump = ctx.bumps.escrow;
     escrow.vault_bump = ctx.bumps.escrow_vault;
 

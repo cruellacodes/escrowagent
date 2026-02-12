@@ -4,17 +4,29 @@ use anchor_spl::token::{self, CloseAccount, Token, TokenAccount, Transfer};
 use crate::errors::AgentVaultError;
 use crate::events::EscrowCompleted;
 use crate::state::config::ProtocolConfig;
-use crate::state::enums::*;
+use crate::state::enums::EscrowStatus;
 use crate::state::escrow::Escrow;
 
-#[derive(Accounts)]
-pub struct ConfirmCompletion<'info> {
-    /// The client confirming the task is done
-    #[account(mut)]
-    pub client: Signer<'info>,
+// ──────────────────────────────────────────────────────
+// Provider Release — H-2 fix
+//
+// Allows the provider to self-release funds when:
+// 1. Status is ProofSubmitted (proof was submitted, not disputed)
+// 2. The confirmation timeout has elapsed:
+//    proof_submitted_at + grace_period < now
+// 3. No dispute was raised (guaranteed by status == ProofSubmitted,
+//    since disputes change status to Disputed)
+//
+// This protects providers from clients who ignore proof
+// and wait for expiry to reclaim funds.
+// ──────────────────────────────────────────────────────
 
-    /// Protocol config — used to validate the fee account
-    /// H-1: Confirmation blocked when protocol is paused
+#[derive(Accounts)]
+pub struct ProviderRelease<'info> {
+    /// The provider self-releasing funds after confirmation timeout
+    pub provider: Signer<'info>,
+
+    /// Protocol config — check paused status
     #[account(
         seeds = [ProtocolConfig::SEED],
         bump = config.bump,
@@ -22,16 +34,11 @@ pub struct ConfirmCompletion<'info> {
     )]
     pub config: Account<'info, ProtocolConfig>,
 
-    /// The escrow account
-    /// M-2: Only MultiSigConfirm and OnChain verification types allow client confirmation
+    /// The escrow account — must be ProofSubmitted and provider must match
     #[account(
         mut,
-        constraint = escrow.client == client.key() @ AgentVaultError::UnauthorizedClient,
+        constraint = escrow.provider == provider.key() @ AgentVaultError::UnauthorizedProvider,
         constraint = escrow.status == EscrowStatus::ProofSubmitted @ AgentVaultError::NoProofSubmitted,
-        constraint = matches!(
-            escrow.verification_type,
-            VerificationType::MultiSigConfirm | VerificationType::OnChain
-        ) @ AgentVaultError::VerificationTypeMismatch,
     )]
     pub escrow: Account<'info, Escrow>,
 
@@ -52,13 +59,12 @@ pub struct ConfirmCompletion<'info> {
     /// Provider's token account to receive payment
     #[account(
         mut,
-        constraint = provider_token_account.owner == escrow.provider,
+        constraint = provider_token_account.owner == provider.key(),
         constraint = provider_token_account.mint == escrow.token_mint,
     )]
     pub provider_token_account: Account<'info, TokenAccount>,
 
-    /// Protocol fee token account
-    /// C-2: Validated against config.fee_authority (owner) + escrow.token_mint (mint)
+    /// Protocol fee token account — validated against config.fee_authority + escrow.token_mint
     #[account(
         mut,
         constraint = protocol_fee_account.owner == config.fee_authority @ AgentVaultError::InvalidFeeAccount,
@@ -66,12 +72,26 @@ pub struct ConfirmCompletion<'info> {
     )]
     pub protocol_fee_account: Account<'info, TokenAccount>,
 
+    /// CHECK: The original client, receives vault rent on close
+    #[account(
+        mut,
+        constraint = client.key() == escrow.client,
+    )]
+    pub client: UncheckedAccount<'info>,
+
     pub token_program: Program<'info, Token>,
 }
 
-pub fn handler(ctx: Context<ConfirmCompletion>) -> Result<()> {
+pub fn handler(ctx: Context<ProviderRelease>) -> Result<()> {
     let clock = Clock::get()?;
     let escrow = &mut ctx.accounts.escrow;
+
+    // Time gate: confirmation period must have elapsed.
+    // Provider can self-release only after proof_submitted_at + grace_period.
+    require!(
+        clock.unix_timestamp > escrow.proof_submitted_at + escrow.grace_period,
+        AgentVaultError::AutoReleaseNotReady
+    );
 
     let protocol_fee = escrow.calculate_protocol_fee()?;
     let provider_amount = escrow.provider_payout()?;
@@ -111,7 +131,7 @@ pub fn handler(ctx: Context<ConfirmCompletion>) -> Result<()> {
         token::transfer(transfer_fee, protocol_fee)?;
     }
 
-    // M-1: Close vault token account, return rent to client
+    // Close vault token account, return rent to client
     let close_ctx = CpiContext::new_with_signer(
         ctx.accounts.token_program.to_account_info(),
         CloseAccount {
@@ -123,7 +143,6 @@ pub fn handler(ctx: Context<ConfirmCompletion>) -> Result<()> {
     );
     token::close_account(close_ctx)?;
 
-    // Update state
     escrow.status = EscrowStatus::Completed;
 
     emit!(EscrowCompleted {

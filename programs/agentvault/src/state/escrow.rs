@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 use crate::state::enums::*;
+use crate::errors::AgentVaultError;
 
 // ──────────────────────────────────────────────────────
 // Escrow Account — one per transaction between agents
@@ -40,10 +41,6 @@ pub struct Escrow {
     // ── Dispute ──
     pub dispute_raised_by: Pubkey,   // Who raised the dispute (default = no dispute)
 
-    // ── Reputation ──
-    pub client_escrow_count: u32,
-    pub provider_escrow_count: u32,
-
     // ── PDA ──
     pub bump: u8,
     pub vault_bump: u8,
@@ -71,8 +68,6 @@ impl Default for Escrow {
             proof_data: [0u8; 64],
             proof_submitted_at: 0,
             dispute_raised_by: Pubkey::default(),
-            client_escrow_count: 0,
-            provider_escrow_count: 0,
             bump: 0,
             vault_bump: 0,
         }
@@ -81,7 +76,6 @@ impl Default for Escrow {
 
 impl Escrow {
     // Fixed account size for rent calculation
-    // 32*5 + 8 + 2 + 2 + 32 + 1 + 1 + 8*3 + 1 + 1+1 + 64 + 8 + 32 + 4*2 + 1 + 1 + padding
     pub const LEN: usize = 8    // discriminator
         + 32 * 5                // pubkeys: client, provider, arbitrator, token_mint, escrow_vault
         + 8                     // amount
@@ -96,10 +90,9 @@ impl Escrow {
         + 64                    // proof_data
         + 8                     // proof_submitted_at
         + 32                    // dispute_raised_by
-        + 4 * 2                 // escrow counts
         + 1                     // bump
         + 1                     // vault_bump
-        + 64;                   // padding for future fields
+        + 72;                   // padding for future fields
 
     pub fn is_expired(&self, current_time: i64) -> bool {
         current_time > self.deadline + self.grace_period
@@ -112,27 +105,35 @@ impl Escrow {
         )
     }
 
-    pub fn calculate_protocol_fee(&self) -> u64 {
+    pub fn calculate_protocol_fee(&self) -> Result<u64> {
         (self.amount as u128)
             .checked_mul(self.protocol_fee_bps as u128)
-            .unwrap()
-            .checked_div(10_000)
-            .unwrap() as u64
+            .and_then(|n| n.checked_div(10_000))
+            .and_then(|n| u64::try_from(n).ok())
+            .ok_or(AgentVaultError::Overflow.into())
     }
 
-    pub fn calculate_arbitrator_fee(&self) -> u64 {
+    pub fn calculate_arbitrator_fee(&self) -> Result<u64> {
         (self.amount as u128)
             .checked_mul(self.arbitrator_fee_bps as u128)
-            .unwrap()
-            .checked_div(10_000)
-            .unwrap() as u64
+            .and_then(|n| n.checked_div(10_000))
+            .and_then(|n| u64::try_from(n).ok())
+            .ok_or(AgentVaultError::Overflow.into())
     }
 
-    pub fn provider_payout(&self) -> u64 {
-        self.amount - self.calculate_protocol_fee()
+    pub fn provider_payout(&self) -> Result<u64> {
+        let protocol_fee = self.calculate_protocol_fee()?;
+        self.amount
+            .checked_sub(protocol_fee)
+            .ok_or(AgentVaultError::Overflow.into())
     }
 
-    pub fn provider_payout_after_dispute(&self) -> u64 {
-        self.amount - self.calculate_protocol_fee() - self.calculate_arbitrator_fee()
+    pub fn provider_payout_after_dispute(&self) -> Result<u64> {
+        let protocol_fee = self.calculate_protocol_fee()?;
+        let arbitrator_fee = self.calculate_arbitrator_fee()?;
+        self.amount
+            .checked_sub(protocol_fee)
+            .and_then(|n| n.checked_sub(arbitrator_fee))
+            .ok_or(AgentVaultError::Overflow.into())
     }
 }

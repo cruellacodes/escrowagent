@@ -9,7 +9,7 @@ use crate::state::escrow::Escrow;
 #[derive(Accounts)]
 pub struct AcceptEscrow<'info> {
     /// The provider (Agent B) accepting the task
-    #[account(mut)]
+    /// I-4: No `mut` needed — provider pays no SOL and no account writes target it
     pub provider: Signer<'info>,
 
     /// Protocol config — check paused status

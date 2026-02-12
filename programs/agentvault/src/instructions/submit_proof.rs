@@ -1,11 +1,23 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 
 use crate::errors::AgentVaultError;
-use crate::events::{EscrowCompleted, EscrowProofSubmitted};
+use crate::events::EscrowProofSubmitted;
 use crate::state::config::ProtocolConfig;
 use crate::state::enums::*;
 use crate::state::escrow::Escrow;
+
+// ──────────────────────────────────────────────────────
+// Submit Proof — stores proof data and sets status to ProofSubmitted
+//
+// C-1: ALL verification types now set status to ProofSubmitted.
+//      No auto-release path exists. Proof is stored, never
+//      auto-released at submission time. Funds are released
+//      only via confirm_completion (client) or provider_release
+//      (provider after timeout).
+//
+// C-2: No fee account needed — no transfers happen at proof
+//      submission. Fees are collected at release time.
+// ──────────────────────────────────────────────────────
 
 #[derive(Accounts)]
 pub struct SubmitProof<'info> {
@@ -13,10 +25,12 @@ pub struct SubmitProof<'info> {
     #[account(mut)]
     pub provider: Signer<'info>,
 
-    /// Protocol config — used to validate the fee account
+    /// Protocol config — check paused status
+    /// H-1: Proof submission blocked when protocol is paused
     #[account(
         seeds = [ProtocolConfig::SEED],
         bump = config.bump,
+        constraint = !config.paused @ AgentVaultError::ProtocolPaused,
     )]
     pub config: Account<'info, ProtocolConfig>,
 
@@ -27,37 +41,6 @@ pub struct SubmitProof<'info> {
         constraint = escrow.status == EscrowStatus::Active @ AgentVaultError::NotActive,
     )]
     pub escrow: Account<'info, Escrow>,
-
-    /// The escrow vault holding funds
-    #[account(
-        mut,
-        constraint = escrow_vault.key() == escrow.escrow_vault,
-    )]
-    pub escrow_vault: Account<'info, TokenAccount>,
-
-    /// CHECK: PDA authority over the vault
-    #[account(
-        seeds = [b"vault_authority", escrow.key().as_ref()],
-        bump,
-    )]
-    pub escrow_vault_authority: UncheckedAccount<'info>,
-
-    /// Provider's token account to receive payment (for auto-release)
-    #[account(
-        mut,
-        constraint = provider_token_account.owner == provider.key(),
-        constraint = provider_token_account.mint == escrow.token_mint,
-    )]
-    pub provider_token_account: Account<'info, TokenAccount>,
-
-    /// Protocol fee token account — MUST match the config's fee_wallet
-    #[account(
-        mut,
-        constraint = protocol_fee_account.key() == config.fee_wallet @ AgentVaultError::InvalidFeeAccount,
-    )]
-    pub protocol_fee_account: Account<'info, TokenAccount>,
-
-    pub token_program: Program<'info, Token>,
 }
 
 pub fn handler(
@@ -79,6 +62,10 @@ pub fn handler(
     escrow.proof_data = proof_data;
     escrow.proof_submitted_at = clock.unix_timestamp;
 
+    // C-1: ALL verification types transition to ProofSubmitted.
+    // Release happens via confirm_completion or provider_release.
+    escrow.status = EscrowStatus::ProofSubmitted;
+
     // Emit proof event
     emit!(EscrowProofSubmitted {
         escrow: escrow.key(),
@@ -86,64 +73,6 @@ pub fn handler(
         proof_type,
         submitted_at: clock.unix_timestamp,
     });
-
-    // Handle based on verification type
-    match escrow.verification_type {
-        VerificationType::OnChain => {
-            let protocol_fee = escrow.calculate_protocol_fee();
-            let provider_amount = escrow.provider_payout();
-
-            let escrow_key = escrow.key();
-            let vault_authority_bump = ctx.bumps.escrow_vault_authority;
-            let seeds = &[
-                b"vault_authority".as_ref(),
-                escrow_key.as_ref(),
-                &[vault_authority_bump],
-            ];
-            let signer_seeds = &[&seeds[..]];
-
-            // Transfer to provider
-            let transfer_provider = CpiContext::new_with_signer(
-                ctx.accounts.token_program.to_account_info(),
-                Transfer {
-                    from: ctx.accounts.escrow_vault.to_account_info(),
-                    to: ctx.accounts.provider_token_account.to_account_info(),
-                    authority: ctx.accounts.escrow_vault_authority.to_account_info(),
-                },
-                signer_seeds,
-            );
-            token::transfer(transfer_provider, provider_amount)?;
-
-            // Transfer protocol fee to the validated fee wallet
-            if protocol_fee > 0 {
-                let transfer_fee = CpiContext::new_with_signer(
-                    ctx.accounts.token_program.to_account_info(),
-                    Transfer {
-                        from: ctx.accounts.escrow_vault.to_account_info(),
-                        to: ctx.accounts.protocol_fee_account.to_account_info(),
-                        authority: ctx.accounts.escrow_vault_authority.to_account_info(),
-                    },
-                    signer_seeds,
-                );
-                token::transfer(transfer_fee, protocol_fee)?;
-            }
-
-            escrow.status = EscrowStatus::Completed;
-
-            emit!(EscrowCompleted {
-                escrow: escrow.key(),
-                amount_paid: provider_amount,
-                fee_collected: protocol_fee,
-                completed_at: clock.unix_timestamp,
-            });
-        }
-        VerificationType::MultiSigConfirm | VerificationType::OracleCallback => {
-            escrow.status = EscrowStatus::ProofSubmitted;
-        }
-        VerificationType::AutoRelease => {
-            escrow.status = EscrowStatus::ProofSubmitted;
-        }
-    }
 
     Ok(())
 }

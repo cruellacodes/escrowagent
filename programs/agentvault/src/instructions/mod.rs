@@ -5,6 +5,7 @@ pub mod create;
 pub mod dispute;
 pub mod expire;
 pub mod initialize_config;
+pub mod provider_release;
 pub mod submit_proof;
 pub mod update_config;
 
@@ -15,5 +16,6 @@ pub use create::*;
 pub use dispute::*;
 pub use expire::*;
 pub use initialize_config::*;
+pub use provider_release::*;
 pub use submit_proof::*;
 pub use update_config::*;

@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, TokenAccount, Transfer};
+use anchor_spl::token::{self, CloseAccount, Token, TokenAccount, Transfer};
 
 use crate::errors::AgentVaultError;
 use crate::events::{DisputeRaised, DisputeResolved};
@@ -17,6 +17,15 @@ pub struct RaiseDispute<'info> {
     #[account(mut)]
     pub raiser: Signer<'info>,
 
+    /// Protocol config — check paused status
+    /// H-1: Dispute raising blocked when protocol is paused
+    #[account(
+        seeds = [ProtocolConfig::SEED],
+        bump = config.bump,
+        constraint = !config.paused @ AgentVaultError::ProtocolPaused,
+    )]
+    pub config: Account<'info, ProtocolConfig>,
+
     /// The escrow account
     #[account(
         mut,
@@ -31,13 +40,8 @@ pub fn raise_handler(ctx: Context<RaiseDispute>) -> Result<()> {
     let escrow = &mut ctx.accounts.escrow;
 
     // Only Active or ProofSubmitted can be disputed
+    // L-5: can_dispute() already excludes Disputed status, no redundant check needed
     require!(escrow.can_dispute(), AgentVaultError::InvalidStatus);
-
-    // Cannot dispute if already disputed
-    require!(
-        escrow.status != EscrowStatus::Disputed,
-        AgentVaultError::AlreadyDisputed
-    );
 
     // Must have an arbitrator assigned
     require!(
@@ -67,6 +71,11 @@ pub fn raise_handler(ctx: Context<RaiseDispute>) -> Result<()> {
 
 // ──────────────────────────────────────────────────────
 // Resolve Dispute — arbitrator only
+//
+// TODO: M-4 — Consider adding a separate `reassign_arbitrator`
+// instruction to allow changing the arbitrator if the assigned
+// one is unresponsive. This would require admin or mutual-consent
+// authorization to prevent abuse.
 // ──────────────────────────────────────────────────────
 
 #[derive(Accounts)]
@@ -76,9 +85,11 @@ pub struct ResolveDispute<'info> {
     pub arbitrator: Signer<'info>,
 
     /// Protocol config — used to validate the fee account
+    /// H-1: Dispute resolution blocked when protocol is paused
     #[account(
         seeds = [ProtocolConfig::SEED],
         bump = config.bump,
+        constraint = !config.paused @ AgentVaultError::ProtocolPaused,
     )]
     pub config: Account<'info, ProtocolConfig>,
 
@@ -105,12 +116,13 @@ pub struct ResolveDispute<'info> {
     pub escrow_vault_authority: UncheckedAccount<'info>,
 
     /// Client's token account (for refund if ruling favors client)
+    /// Boxed to reduce stack frame size
     #[account(
         mut,
         constraint = client_token_account.owner == escrow.client,
         constraint = client_token_account.mint == escrow.token_mint,
     )]
-    pub client_token_account: Account<'info, TokenAccount>,
+    pub client_token_account: Box<Account<'info, TokenAccount>>,
 
     /// Provider's token account (for payment if ruling favors provider)
     #[account(
@@ -118,7 +130,7 @@ pub struct ResolveDispute<'info> {
         constraint = provider_token_account.owner == escrow.provider,
         constraint = provider_token_account.mint == escrow.token_mint,
     )]
-    pub provider_token_account: Account<'info, TokenAccount>,
+    pub provider_token_account: Box<Account<'info, TokenAccount>>,
 
     /// Arbitrator's token account (for arbitrator fee)
     #[account(
@@ -126,14 +138,23 @@ pub struct ResolveDispute<'info> {
         constraint = arbitrator_token_account.owner == arbitrator.key(),
         constraint = arbitrator_token_account.mint == escrow.token_mint,
     )]
-    pub arbitrator_token_account: Account<'info, TokenAccount>,
+    pub arbitrator_token_account: Box<Account<'info, TokenAccount>>,
 
-    /// Protocol fee token account — MUST match the config's fee_wallet
+    /// Protocol fee token account
+    /// C-2: Validated against config.fee_authority (owner) + escrow.token_mint (mint)
     #[account(
         mut,
-        constraint = protocol_fee_account.key() == config.fee_wallet @ AgentVaultError::InvalidFeeAccount,
+        constraint = protocol_fee_account.owner == config.fee_authority @ AgentVaultError::InvalidFeeAccount,
+        constraint = protocol_fee_account.mint == escrow.token_mint @ AgentVaultError::InvalidFeeAccount,
     )]
-    pub protocol_fee_account: Account<'info, TokenAccount>,
+    pub protocol_fee_account: Box<Account<'info, TokenAccount>>,
+
+    /// CHECK: The original client, receives vault rent on close
+    #[account(
+        mut,
+        constraint = client.key() == escrow.client,
+    )]
+    pub client: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
 }
@@ -145,9 +166,13 @@ pub fn resolve_handler(
     let clock = Clock::get()?;
     let escrow = &mut ctx.accounts.escrow;
 
-    let protocol_fee = escrow.calculate_protocol_fee();
-    let arbitrator_fee = escrow.calculate_arbitrator_fee();
-    let distributable = escrow.amount - protocol_fee - arbitrator_fee;
+    let protocol_fee = escrow.calculate_protocol_fee()?;
+    let arbitrator_fee = escrow.calculate_arbitrator_fee()?;
+    let distributable = escrow
+        .amount
+        .checked_sub(protocol_fee)
+        .and_then(|n| n.checked_sub(arbitrator_fee))
+        .ok_or(AgentVaultError::Overflow)?;
 
     let escrow_key = escrow.key();
     let vault_authority_bump = ctx.bumps.escrow_vault_authority;
@@ -238,7 +263,7 @@ pub fn resolve_handler(
         token::transfer(transfer_arb, arbitrator_fee)?;
     }
 
-    // Pay protocol fee to the validated fee wallet
+    // Pay protocol fee to the validated fee account
     if protocol_fee > 0 {
         let transfer_fee = CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
@@ -251,6 +276,18 @@ pub fn resolve_handler(
         );
         token::transfer(transfer_fee, protocol_fee)?;
     }
+
+    // M-1: Close vault token account, return rent to client
+    let close_ctx = CpiContext::new_with_signer(
+        ctx.accounts.token_program.to_account_info(),
+        CloseAccount {
+            account: ctx.accounts.escrow_vault.to_account_info(),
+            destination: ctx.accounts.client.to_account_info(),
+            authority: ctx.accounts.escrow_vault_authority.to_account_info(),
+        },
+        signer_seeds,
+    );
+    token::close_account(close_ctx)?;
 
     escrow.status = EscrowStatus::Resolved;
 

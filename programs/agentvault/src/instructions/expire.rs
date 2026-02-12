@@ -22,9 +22,13 @@ pub struct ExpireEscrow<'info> {
     pub config: Account<'info, ProtocolConfig>,
 
     /// The escrow account
+    /// H-2: Only Active and AwaitingProvider are expirable by deadline.
+    ///      ProofSubmitted is EXCLUDED — once proof is submitted, the
+    ///      provider is protected. Funds can only be released via
+    ///      confirm_completion, provider_release, or dispute resolution.
     #[account(
         mut,
-        constraint = matches!(escrow.status, EscrowStatus::Active | EscrowStatus::ProofSubmitted | EscrowStatus::AwaitingProvider)
+        constraint = matches!(escrow.status, EscrowStatus::Active | EscrowStatus::AwaitingProvider)
             @ AgentVaultError::InvalidStatus,
     )]
     pub escrow: Account<'info, Escrow>,
