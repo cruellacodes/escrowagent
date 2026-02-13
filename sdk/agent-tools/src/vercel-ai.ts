@@ -8,7 +8,7 @@
  */
 
 import { tool } from "ai";
-import type { AgentVault } from "@escrowagent/sdk";
+import type { AgentVault } from "escrowagent-sdk";
 import { TOOL_DEFINITIONS } from "./definitions";
 import { ToolExecutor } from "./executor";
 

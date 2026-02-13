@@ -1,4 +1,4 @@
-import { AgentVault, USDC_MINT } from "@escrowagent/sdk";
+import { AgentVault, USDC_MINT } from "escrowagent-sdk";
 import type { z } from "zod";
 import type {
   CreateEscrowSchema,

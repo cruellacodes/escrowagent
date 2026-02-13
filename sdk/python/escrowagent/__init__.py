@@ -1,4 +1,4 @@
-"""EscrowAgent Python SDK — escrow & SLA layer for agent-to-agent transactions on Solana."""
+"""EscrowAgent Python SDK — escrow & SLA layer for agent-to-agent transactions on Solana and Base."""
 
 from escrowagent.client import AgentVault
 from escrowagent.types import (
@@ -15,7 +15,7 @@ from escrowagent.types import (
     VerificationType,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __all__ = [
     "AgentVault",
     "AgentStats",

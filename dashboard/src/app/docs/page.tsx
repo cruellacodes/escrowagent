@@ -33,6 +33,7 @@ export default function DocsPage() {
         </p>
         {[
           { href: "#getting-started", label: "Getting Started" },
+          { href: "#base-chain", label: "Base (EVM) Support" },
           { href: "#sdk-reference", label: "SDK Reference" },
           { href: "#protocol-config", label: "Protocol Config" },
           { href: "#fees", label: "Fee Structure" },
@@ -59,8 +60,8 @@ export default function DocsPage() {
           <p className="text-[14px] leading-relaxed text-[var(--text-secondary)]">
             Install the SDK and create your first escrow in under 5 minutes.
           </p>
-          <CodeBlock title="terminal">{`npm install @escrowagent/sdk @solana/web3.js`}</CodeBlock>
-          <CodeBlock title="agent.ts">{`import { EscrowAgent, USDC_MINT } from "@escrowagent/sdk";
+          <CodeBlock title="terminal">{`npm install escrowagent-sdk @solana/web3.js`}</CodeBlock>
+          <CodeBlock title="agent.ts">{`import { EscrowAgent, USDC_MINT } from "escrowagent-sdk";
 import { Connection, Keypair } from "@solana/web3.js";
 
 const vault = new EscrowAgent({
@@ -84,6 +85,46 @@ const result = await vault.createEscrow({
 });
 
 console.log("Escrow:", result.escrowAddress);`}</CodeBlock>
+        </Section>
+
+        {/* Base (EVM) Support */}
+        <Section id="base-chain" title="Base (EVM) Support">
+          <p className="text-[14px] leading-relaxed text-[var(--text-secondary)]">
+            EscrowAgent now supports <strong className="text-white">Base</strong> (Coinbase&apos;s Ethereum L2) alongside Solana. The same escrow flow works on both chains.
+          </p>
+          <CodeBlock title="base-setup.ts">{`import { AgentVault } from "escrowagent-sdk";
+
+// Connect to Base
+const vault = new AgentVault({
+  chain: "base",
+  privateKey: process.env.PRIVATE_KEY,
+  contractAddress: "0x...",  // Deployed contract
+  rpcUrl: "https://mainnet.base.org",
+  chainId: 8453,
+});
+
+// Same API as Solana — create, accept, confirm, etc.
+const result = await vault.createEscrow({
+  provider: "0xProviderAddress...",
+  amount: 50_000_000,
+  tokenMint: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", // USDC on Base
+  deadline: Date.now() + 600_000,
+  task: { description: "Execute swap", criteria: [...] },
+  verification: "MultiSigConfirm",
+});`}</CodeBlock>
+          <div className="glass rounded-xl p-5 space-y-3">
+            <h3 className="text-[14px] font-semibold text-white">Base Network Details</h3>
+            <div className="grid grid-cols-2 gap-3 text-[13px] text-[var(--text-secondary)]">
+              <div><span className="text-[var(--text-tertiary)]">Mainnet Chain ID:</span> 8453</div>
+              <div><span className="text-[var(--text-tertiary)]">Sepolia Chain ID:</span> 84532</div>
+              <div><span className="text-[var(--text-tertiary)]">Mainnet RPC:</span> mainnet.base.org</div>
+              <div><span className="text-[var(--text-tertiary)]">Explorer:</span> basescan.org</div>
+            </div>
+          </div>
+          <p className="text-[14px] leading-relaxed text-[var(--text-secondary)]">
+            <strong className="text-white">Note:</strong> On Base, users must <code className="rounded bg-[var(--surface)] px-1.5 py-0.5 text-[13px] text-[var(--accent)]">approve()</code> the
+            contract to spend their ERC-20 tokens before creating an escrow. The SDK handles this automatically.
+          </p>
         </Section>
 
         {/* SDK Reference */}

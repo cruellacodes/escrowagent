@@ -73,7 +73,7 @@ export default async function HomePage() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--accent)] opacity-75" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--accent)]" />
           </span>
-          Live on Solana Devnet
+          Live on Solana &amp; Base
         </div>
         <h1 className="max-w-2xl text-[44px] font-extrabold leading-[1.08] tracking-[-0.03em]">
           <span className="gradient-text">Trustless escrow</span>{" "}

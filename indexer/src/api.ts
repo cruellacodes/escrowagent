@@ -228,5 +228,154 @@ export function buildApp() {
     };
   });
 
+  // ── Analytics (detailed protocol metrics) ──
+
+  app.get("/analytics", async () => {
+    // 1. Per-chain breakdown
+    const chainStats = await db.query(`
+      SELECT
+        chain,
+        COUNT(*) as total_escrows,
+        COUNT(*) FILTER (WHERE status = 'Completed') as completed,
+        COUNT(*) FILTER (WHERE status = 'Active' OR status = 'AwaitingProvider' OR status = 'ProofSubmitted') as active,
+        COUNT(*) FILTER (WHERE status = 'Disputed') as disputed,
+        COUNT(*) FILTER (WHERE status = 'Cancelled') as cancelled,
+        COUNT(*) FILTER (WHERE status = 'Expired') as expired,
+        COALESCE(SUM(amount), 0) as total_volume,
+        COALESCE(SUM(amount) FILTER (WHERE status = 'Completed'), 0) as settled_volume,
+        COALESCE(SUM(amount) FILTER (WHERE status IN ('Active', 'AwaitingProvider', 'ProofSubmitted', 'Disputed')), 0) as locked_volume
+      FROM escrows
+      GROUP BY chain
+    `);
+
+    // 2. Weekly trend (last 12 weeks)
+    const weeklyTrend = await db.query(`
+      SELECT
+        date_trunc('week', created_at)::date as week,
+        chain,
+        COUNT(*) as escrows_created,
+        COALESCE(SUM(amount), 0) as volume
+      FROM escrows
+      WHERE created_at >= NOW() - INTERVAL '12 weeks'
+      GROUP BY week, chain
+      ORDER BY week ASC
+    `);
+
+    // 3. Active agents (unique addresses seen in last 30 days)
+    const agentCounts = await db.query(`
+      SELECT COUNT(DISTINCT addr) as active_agents FROM (
+        SELECT client_address as addr FROM escrows WHERE updated_at >= NOW() - INTERVAL '30 days'
+        UNION
+        SELECT provider_address as addr FROM escrows WHERE updated_at >= NOW() - INTERVAL '30 days'
+      ) combined
+    `);
+
+    // 4. Top agents by volume
+    const topAgents = await db.query(`
+      SELECT
+        addr as address,
+        COUNT(*) as total_escrows,
+        COALESCE(SUM(amount), 0) as total_volume,
+        COUNT(*) FILTER (WHERE status = 'Completed') as completed
+      FROM (
+        SELECT client_address as addr, amount, status FROM escrows
+        UNION ALL
+        SELECT provider_address as addr, amount, status FROM escrows
+      ) combined
+      GROUP BY addr
+      ORDER BY total_volume DESC
+      LIMIT 10
+    `);
+
+    // 5. Completion rate & average time
+    const performance = await db.query(`
+      SELECT
+        chain,
+        CASE WHEN COUNT(*) FILTER (WHERE status IN ('Completed', 'Disputed', 'Resolved', 'Expired', 'Cancelled')) > 0
+          THEN ROUND(
+            COUNT(*) FILTER (WHERE status = 'Completed')::numeric * 100 /
+            NULLIF(COUNT(*) FILTER (WHERE status IN ('Completed', 'Disputed', 'Resolved', 'Expired', 'Cancelled')), 0),
+            1
+          )
+          ELSE 0
+        END as completion_rate,
+        CASE WHEN COUNT(*) FILTER (WHERE status IN ('Disputed', 'Resolved')) > 0
+          THEN ROUND(
+            COUNT(*) FILTER (WHERE status IN ('Disputed', 'Resolved'))::numeric * 100 /
+            NULLIF(COUNT(*) FILTER (WHERE status IN ('Completed', 'Disputed', 'Resolved', 'Expired', 'Cancelled')), 0),
+            1
+          )
+          ELSE 0
+        END as dispute_rate,
+        COALESCE(
+          ROUND(AVG(EXTRACT(EPOCH FROM (completed_at - created_at)))::numeric, 0)
+          FILTER (WHERE status = 'Completed' AND completed_at IS NOT NULL),
+          0
+        ) as avg_completion_seconds
+      FROM escrows
+      GROUP BY chain
+    `);
+
+    // 6. Daily volume (last 30 days, for sparkline chart)
+    const dailyVolume = await db.query(`
+      SELECT
+        date_trunc('day', created_at)::date as day,
+        COUNT(*) as escrows,
+        COALESCE(SUM(amount), 0) as volume
+      FROM escrows
+      WHERE created_at >= NOW() - INTERVAL '30 days'
+      GROUP BY day
+      ORDER BY day ASC
+    `);
+
+    // Build per-chain stats map
+    const chains: Record<string, any> = {};
+    for (const row of chainStats.rows) {
+      chains[row.chain || "solana"] = {
+        totalEscrows: parseInt(row.total_escrows, 10),
+        completed: parseInt(row.completed, 10),
+        active: parseInt(row.active, 10),
+        disputed: parseInt(row.disputed, 10),
+        cancelled: parseInt(row.cancelled, 10),
+        expired: parseInt(row.expired, 10),
+        totalVolume: parseInt(row.total_volume, 10),
+        settledVolume: parseInt(row.settled_volume, 10),
+        lockedVolume: parseInt(row.locked_volume, 10),
+      };
+    }
+
+    const perfMap: Record<string, any> = {};
+    for (const row of performance.rows) {
+      perfMap[row.chain || "solana"] = {
+        completionRate: parseFloat(row.completion_rate),
+        disputeRate: parseFloat(row.dispute_rate),
+        avgCompletionSeconds: parseInt(row.avg_completion_seconds, 10),
+      };
+    }
+
+    return {
+      chains,
+      performance: perfMap,
+      activeAgents: parseInt(agentCounts.rows[0]?.active_agents || "0", 10),
+      topAgents: topAgents.rows.map((r: any) => ({
+        address: r.address,
+        totalEscrows: parseInt(r.total_escrows, 10),
+        totalVolume: parseInt(r.total_volume, 10),
+        completed: parseInt(r.completed, 10),
+      })),
+      weeklyTrend: weeklyTrend.rows.map((r: any) => ({
+        week: r.week,
+        chain: r.chain || "solana",
+        escrowsCreated: parseInt(r.escrows_created, 10),
+        volume: parseInt(r.volume, 10),
+      })),
+      dailyVolume: dailyVolume.rows.map((r: any) => ({
+        day: r.day,
+        escrows: parseInt(r.escrows, 10),
+        volume: parseInt(r.volume, 10),
+      })),
+    };
+  });
+
   return app;
 }

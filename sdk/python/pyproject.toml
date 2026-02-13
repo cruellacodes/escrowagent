@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "escrowagent-sdk"
-version = "0.1.0"
-description = "Python SDK for EscrowAgent — escrow & SLA layer for agent-to-agent transactions on Solana"
+version = "0.2.0"
+description = "Python SDK for EscrowAgent — escrow & SLA layer for agent-to-agent transactions on Solana and Base"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
-keywords = ["solana", "escrow", "agents", "sla", "web3"]
+keywords = ["solana", "base", "escrow", "agents", "sla", "web3", "evm"]
 dependencies = [
     "solders>=0.21.0",
     "solana>=0.34.0",
@@ -18,7 +18,14 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+base = [
+    "web3>=7.0",
+    "eth-account>=0.13.0",
+]
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.23.0",
+]
+all = [
+    "escrowagent-sdk[base]",
 ]

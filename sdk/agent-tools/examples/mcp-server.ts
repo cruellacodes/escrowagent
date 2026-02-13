@@ -22,7 +22,7 @@
  *   }
  */
 
-import { AgentVault } from "@escrowagent/sdk";
+import { AgentVault } from "escrowagent-sdk";
 import { createMCPServer } from "../src/mcp";
 import { Connection, Keypair } from "@solana/web3.js";
 

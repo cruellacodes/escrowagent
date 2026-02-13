@@ -70,6 +70,82 @@ export async function fetchAgentStats(address: string) {
   return res.json();
 }
 
+// ── Analytics types ──
+
+export interface ChainMetrics {
+  totalEscrows: number;
+  completed: number;
+  active: number;
+  disputed: number;
+  cancelled: number;
+  expired: number;
+  totalVolume: number;
+  settledVolume: number;
+  lockedVolume: number;
+}
+
+export interface ChainPerformance {
+  completionRate: number;
+  disputeRate: number;
+  avgCompletionSeconds: number;
+}
+
+export interface WeeklyDataPoint {
+  week: string;
+  chain: string;
+  escrowsCreated: number;
+  volume: number;
+}
+
+export interface DailyDataPoint {
+  day: string;
+  escrows: number;
+  volume: number;
+}
+
+export interface TopAgent {
+  address: string;
+  totalEscrows: number;
+  totalVolume: number;
+  completed: number;
+}
+
+export interface AnalyticsData {
+  chains: Record<string, ChainMetrics>;
+  performance: Record<string, ChainPerformance>;
+  activeAgents: number;
+  topAgents: TopAgent[];
+  weeklyTrend: WeeklyDataPoint[];
+  dailyVolume: DailyDataPoint[];
+}
+
+export interface NpmDownloads {
+  downloads: number;
+  package: string;
+  start: string;
+  end: string;
+}
+
+export async function fetchAnalytics(): Promise<AnalyticsData> {
+  const res = await fetch(`${API_URL}/analytics`, { next: { revalidate: 60 } });
+  if (!res.ok) throw new Error("Failed to fetch analytics");
+  return res.json();
+}
+
+export async function fetchNpmDownloads(pkg: string): Promise<number> {
+  try {
+    const res = await fetch(
+      `https://api.npmjs.org/downloads/point/last-month/${pkg}`,
+      { next: { revalidate: 3600 } }
+    );
+    if (!res.ok) return 0;
+    const data: NpmDownloads = await res.json();
+    return data.downloads;
+  } catch {
+    return 0;
+  }
+}
+
 export function formatAmount(amount: number, decimals = 6): string {
   return (amount / Math.pow(10, decimals)).toLocaleString(undefined, {
     minimumFractionDigits: 2,

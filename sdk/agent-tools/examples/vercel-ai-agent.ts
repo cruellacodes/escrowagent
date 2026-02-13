@@ -8,7 +8,7 @@
  *   npx tsx examples/vercel-ai-agent.ts
  */
 
-import { AgentVault, USDC_DEVNET_MINT } from "@escrowagent/sdk";
+import { AgentVault, USDC_DEVNET_MINT } from "escrowagent-sdk";
 import { createVercelAITools } from "../src/vercel-ai";
 import { Connection, Keypair } from "@solana/web3.js";
 

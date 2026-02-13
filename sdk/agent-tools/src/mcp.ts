@@ -16,7 +16,7 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import type { AgentVault } from "@escrowagent/sdk";
+import type { AgentVault } from "escrowagent-sdk";
 import { TOOL_DEFINITIONS } from "./definitions";
 import { ToolExecutor } from "./executor";
 import { zodToJsonSchema } from "./utils";

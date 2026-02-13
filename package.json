@@ -1,12 +1,16 @@
 {
   "name": "escrowagent",
-  "version": "0.1.0",
-  "description": "EscrowAgent — Trust & settlement layer for agent-to-agent transactions on Solana",
+  "version": "0.2.0",
+  "description": "EscrowAgent — Trust & settlement layer for agent-to-agent transactions on Solana and Base",
   "scripts": {
     "test": "anchor test",
     "test:local": "anchor test --skip-local-validator",
+    "test:base": "cd contracts && forge test -vv",
     "build": "anchor build",
+    "build:base": "cd contracts && forge build",
     "deploy:devnet": "anchor deploy --provider.cluster devnet",
+    "deploy:base-sepolia": "cd contracts && forge script script/Deploy.s.sol --rpc-url https://sepolia.base.org --broadcast --verify",
+    "deploy:base-mainnet": "cd contracts && forge script script/Deploy.s.sol --rpc-url https://mainnet.base.org --broadcast --verify",
     "lint": "eslint tests/ sdk/"
   },
   "dependencies": {

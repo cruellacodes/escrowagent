@@ -4,7 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "EscrowAgent — Escrow Dashboard",
   description:
-    "Trust & settlement layer for autonomous agent-to-agent transactions on Solana",
+    "Trust & settlement layer for autonomous agent-to-agent transactions on Solana and Base",
 };
 
 export default function RootLayout({
@@ -52,6 +52,7 @@ export default function RootLayout({
               {[
                 { href: "/", label: "Dashboard" },
                 { href: "/escrows", label: "Escrows" },
+                { href: "/analytics", label: "Analytics" },
                 { href: "/docs", label: "Docs" },
               ].map(({ href, label }) => (
                 <a
@@ -62,8 +63,26 @@ export default function RootLayout({
                   {label}
                 </a>
               ))}
+              {/* Chain Selector */}
               <div className="ml-3 h-5 w-px bg-[var(--border)]" />
-              <button className="ml-3 flex items-center gap-2 rounded-lg bg-gradient-to-r from-[var(--accent)] to-[#9174ff] px-4 py-2 text-[13px] font-semibold text-white shadow-lg shadow-[var(--accent)]/20 transition-all hover:shadow-[var(--accent)]/30 hover:brightness-110 active:scale-[0.98]">
+              <div className="ml-2 flex items-center gap-1 rounded-lg bg-[var(--surface-hover)] p-0.5">
+                <a
+                  href="/?chain=solana"
+                  className="rounded-md px-3 py-1.5 text-[12px] font-semibold transition-all hover:bg-[var(--accent-soft)] hover:text-[var(--accent)]"
+                  title="Solana"
+                >
+                  Solana
+                </a>
+                <a
+                  href="/?chain=base"
+                  className="rounded-md px-3 py-1.5 text-[12px] font-semibold transition-all hover:bg-[var(--accent-soft)] hover:text-[var(--accent)]"
+                  title="Base"
+                >
+                  Base
+                </a>
+              </div>
+              <div className="ml-2 h-5 w-px bg-[var(--border)]" />
+              <button className="ml-2 flex items-center gap-2 rounded-lg bg-gradient-to-r from-[var(--accent)] to-[#9174ff] px-4 py-2 text-[13px] font-semibold text-white shadow-lg shadow-[var(--accent)]/20 transition-all hover:shadow-[var(--accent)]/30 hover:brightness-110 active:scale-[0.98]">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
                   <polyline points="10 17 15 12 10 7" />
@@ -87,6 +106,7 @@ export default function RootLayout({
               <a href="https://github.com" className="hover:text-[var(--text-secondary)] transition-colors">GitHub</a>
               <a href="/docs" className="hover:text-[var(--text-secondary)] transition-colors">Docs</a>
               <a href="https://solscan.io" className="hover:text-[var(--text-secondary)] transition-colors">Solscan</a>
+              <a href="https://basescan.org" className="hover:text-[var(--text-secondary)] transition-colors">Basescan</a>
             </div>
           </div>
         </footer>

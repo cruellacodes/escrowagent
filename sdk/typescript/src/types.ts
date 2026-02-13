@@ -1,7 +1,5 @@
-import { PublicKey } from "@solana/web3.js";
-
 // ──────────────────────────────────────────────────────
-// Enums (mirrors on-chain enums)
+// Enums (mirrors on-chain enums — shared across chains)
 // ──────────────────────────────────────────────────────
 
 export type EscrowStatus =
@@ -37,6 +35,8 @@ export type DisputeRuling =
   | { type: "PayProvider" }
   | { type: "Split"; clientBps: number; providerBps: number };
 
+export type ChainType = "solana" | "base";
+
 // ──────────────────────────────────────────────────────
 // Create Escrow params
 // ──────────────────────────────────────────────────────
@@ -54,12 +54,12 @@ export interface TaskDefinition {
 }
 
 export interface CreateEscrowParams {
-  /** Provider (Agent B) public key */
-  provider: string | PublicKey;
+  /** Provider (Agent B) address */
+  provider: string;
   /** Amount in smallest token unit (e.g., 50_000_000 for 50 USDC) */
   amount: number;
-  /** SPL token mint address */
-  tokenMint: string | PublicKey;
+  /** Token address (SPL mint on Solana, ERC-20 address on Base) */
+  tokenMint: string;
   /** Deadline as Date or unix timestamp (ms) */
   deadline: Date | number;
   /** Grace period in seconds (default: 300) */
@@ -68,8 +68,8 @@ export interface CreateEscrowParams {
   task: TaskDefinition;
   /** How completion is verified */
   verification: VerificationType;
-  /** Optional arbitrator public key */
-  arbitrator?: string | PublicKey;
+  /** Optional arbitrator address for dispute resolution */
+  arbitrator?: string;
 }
 
 // ──────────────────────────────────────────────────────
@@ -79,7 +79,7 @@ export interface CreateEscrowParams {
 export interface SubmitProofParams {
   type: ProofType;
   /** Proof data — tx signature, oracle attestation, etc. */
-  data: string | Buffer;
+  data: string | Uint8Array;
 }
 
 // ──────────────────────────────────────────────────────
@@ -126,31 +126,58 @@ export interface AgentStats {
 
 export interface ListEscrowsFilter {
   status?: EscrowStatus;
-  client?: string | PublicKey;
-  provider?: string | PublicKey;
+  client?: string;
+  provider?: string;
   limit?: number;
   offset?: number;
 }
 
 // ──────────────────────────────────────────────────────
-// SDK Configuration
+// Chain-agnostic interface (implemented by Solana + Base)
+// ──────────────────────────────────────────────────────
+
+export interface IEscrowClient {
+  createEscrow(params: CreateEscrowParams): Promise<TransactionResult>;
+  acceptEscrow(escrowAddress: string): Promise<string>;
+  submitProof(escrowAddress: string, proof: SubmitProofParams): Promise<string>;
+  confirmCompletion(escrowAddress: string): Promise<string>;
+  cancelEscrow(escrowAddress: string): Promise<string>;
+  raiseDispute(escrowAddress: string, params: { reason: string }): Promise<string>;
+  resolveDispute(escrowAddress: string, ruling: DisputeRuling): Promise<string>;
+  getEscrow(escrowAddress: string): Promise<EscrowInfo>;
+  listEscrows(filter?: ListEscrowsFilter): Promise<EscrowInfo[]>;
+  getAgentStats(agentAddress: string): Promise<AgentStats>;
+}
+
+// ──────────────────────────────────────────────────────
+// SDK Configuration (multi-chain)
 // ──────────────────────────────────────────────────────
 
 export interface AgentVaultConfig {
-  /** Solana RPC connection or URL */
-  connection: any; // Connection from @solana/web3.js
-  /** Wallet keypair or adapter */
-  wallet: any;
+  /** Which chain to use — "solana" (default) or "base" */
+  chain?: ChainType;
   /** Optional indexer API URL for query methods */
   indexerUrl?: string;
-  /** Program ID override (defaults to deployed address) */
-  programId?: string | PublicKey;
-  /** Protocol fee account (required for creating escrows) */
-  protocolFeeAccount?: string | PublicKey;
-  /** Compute units per transaction (default 200000) */
-  computeUnits?: number;
-  /** Priority fee in micro-lamports per compute unit (default 1000) */
-  priorityFee?: number;
+
+  // ── Solana-specific config ──
+  /** Solana RPC connection or URL string */
+  connection?: any;
+  /** Solana wallet keypair */
+  wallet?: any;
+  /** Solana program ID override */
+  programId?: string;
+  /** Solana protocol fee account */
+  protocolFeeAccount?: string;
+
+  // ── Base-specific config ──
+  /** Base RPC URL */
+  rpcUrl?: string;
+  /** Base wallet private key (hex) */
+  privateKey?: string;
+  /** Base contract address */
+  contractAddress?: string;
+  /** Base chain ID (8453 = mainnet, 84532 = sepolia) */
+  chainId?: number;
 }
 
 export interface TransactionResult {

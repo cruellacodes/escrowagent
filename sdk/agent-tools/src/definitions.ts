@@ -15,16 +15,17 @@ import { z } from "zod";
 // ──────────────────────────────────────────────────────
 
 export const CreateEscrowSchema = z.object({
-  provider: z.string().describe("Solana public key of the provider agent (Agent B) who will do the work"),
+  provider: z.string().describe("Address of the provider agent (Agent B) who will do the work"),
   amount: z.number().positive().describe("Amount to escrow in token's smallest unit (e.g. 50000000 for 50 USDC)"),
-  tokenMint: z.string().describe("SPL token mint address (e.g. USDC mint)"),
+  tokenMint: z.string().describe("Token address (SPL mint on Solana, ERC-20 address on Base)"),
   deadlineMinutes: z.number().positive().default(10).describe("Minutes from now until the deadline"),
   gracePeriodSeconds: z.number().nonnegative().default(300).describe("Seconds after deadline for dispute filing"),
   taskDescription: z.string().describe("Human-readable description of what the provider should do"),
   criteriaTypes: z.array(z.string()).default(["TransactionExecuted"]).describe("Types of success criteria"),
   criteriaDescriptions: z.array(z.string()).default(["Task completed successfully"]).describe("Human-readable descriptions of each criterion"),
   verification: z.enum(["OnChain", "MultiSigConfirm", "OracleCallback", "AutoRelease"]).default("MultiSigConfirm").describe("How completion will be verified"),
-  arbitrator: z.string().optional().describe("Optional arbitrator public key for dispute resolution"),
+  arbitrator: z.string().optional().describe("Optional arbitrator address for dispute resolution"),
+  chain: z.enum(["solana", "base"]).default("solana").describe("Which blockchain to use — solana or base"),
 });
 
 export const AcceptEscrowSchema = z.object({
@@ -56,13 +57,13 @@ export const GetEscrowSchema = z.object({
 
 export const ListEscrowsSchema = z.object({
   status: z.enum(["AwaitingProvider", "Active", "ProofSubmitted", "Completed", "Disputed", "Resolved", "Expired", "Cancelled"]).optional().describe("Filter by escrow status"),
-  client: z.string().optional().describe("Filter by client public key"),
-  provider: z.string().optional().describe("Filter by provider public key"),
+  client: z.string().optional().describe("Filter by client address"),
+  provider: z.string().optional().describe("Filter by provider address"),
   limit: z.number().positive().default(10).describe("Maximum number of results"),
 });
 
 export const GetAgentStatsSchema = z.object({
-  agentAddress: z.string().describe("Public key of the agent to look up reputation for"),
+  agentAddress: z.string().describe("Address of the agent to look up reputation for"),
 });
 
 // ──────────────────────────────────────────────────────
@@ -79,7 +80,7 @@ export const TOOL_DEFINITIONS = {
   create_escrow: {
     name: "create_escrow",
     description:
-      "Lock funds in an escrow for an agent-to-agent task. You (the client) deposit tokens that will be released to the provider agent upon verified task completion. Define the task, success criteria, deadline, and verification method. The funds are held in a secure on-chain vault — neither party can access them until conditions are met.",
+      "Lock funds in an escrow for an agent-to-agent task on Solana or Base. You (the client) deposit tokens that will be released to the provider agent upon verified task completion. Define the task, success criteria, deadline, and verification method. The funds are held in a secure on-chain vault — neither party can access them until conditions are met.",
     parameters: CreateEscrowSchema,
   },
 

@@ -29,11 +29,11 @@ const MIGRATION_SQL = `
 -- Core escrow records (indexed from on-chain events)
 CREATE TABLE IF NOT EXISTS escrows (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    escrow_address VARCHAR(44) UNIQUE NOT NULL,
-    client_address VARCHAR(44) NOT NULL,
-    provider_address VARCHAR(44) NOT NULL,
-    arbitrator_address VARCHAR(44),
-    token_mint VARCHAR(44) NOT NULL,
+    escrow_address TEXT UNIQUE NOT NULL,
+    client_address TEXT NOT NULL,
+    provider_address TEXT NOT NULL,
+    arbitrator_address TEXT,
+    token_mint TEXT NOT NULL,
     amount BIGINT NOT NULL,
     protocol_fee_bps SMALLINT NOT NULL DEFAULT 50,
     status VARCHAR(20) NOT NULL DEFAULT 'AwaitingProvider',
@@ -44,7 +44,8 @@ CREATE TABLE IF NOT EXISTS escrows (
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW(),
     completed_at TIMESTAMP,
-    tx_signature VARCHAR(88)
+    tx_signature TEXT,
+    chain VARCHAR(10) NOT NULL DEFAULT 'solana'
 );
 
 -- Full task descriptions (stored off-chain, hash on-chain)
@@ -59,7 +60,7 @@ CREATE TABLE IF NOT EXISTS tasks (
 -- Proof submissions
 CREATE TABLE IF NOT EXISTS proofs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    escrow_address VARCHAR(44) REFERENCES escrows(escrow_address),
+    escrow_address TEXT REFERENCES escrows(escrow_address),
     proof_type VARCHAR(30) NOT NULL,
     proof_data TEXT NOT NULL,
     submitted_at TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -69,8 +70,8 @@ CREATE TABLE IF NOT EXISTS proofs (
 -- Dispute records
 CREATE TABLE IF NOT EXISTS disputes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    escrow_address VARCHAR(44) REFERENCES escrows(escrow_address),
-    raised_by VARCHAR(44) NOT NULL,
+    escrow_address TEXT REFERENCES escrows(escrow_address),
+    raised_by TEXT NOT NULL,
     reason TEXT NOT NULL,
     ruling VARCHAR(20),
     ruling_details JSONB,
@@ -80,7 +81,7 @@ CREATE TABLE IF NOT EXISTS disputes (
 
 -- Agent reputation / stats (materialized view, updated on events)
 CREATE TABLE IF NOT EXISTS agent_stats (
-    agent_address VARCHAR(44) PRIMARY KEY,
+    agent_address TEXT PRIMARY KEY,
     total_escrows INTEGER DEFAULT 0,
     completed_escrows INTEGER DEFAULT 0,
     disputed_escrows INTEGER DEFAULT 0,
@@ -94,8 +95,8 @@ CREATE TABLE IF NOT EXISTS agent_stats (
 -- Protocol config (indexed from ProtocolInitialized / ProtocolConfigUpdated events)
 CREATE TABLE IF NOT EXISTS protocol_config (
     id INTEGER PRIMARY KEY DEFAULT 1,
-    admin_address VARCHAR(44) NOT NULL,
-    fee_wallet VARCHAR(44) NOT NULL,
+    admin_address TEXT NOT NULL,
+    fee_wallet TEXT NOT NULL,
     protocol_fee_bps SMALLINT NOT NULL,
     arbitrator_fee_bps SMALLINT NOT NULL,
     min_escrow_amount BIGINT NOT NULL,
@@ -110,6 +111,7 @@ CREATE INDEX IF NOT EXISTS idx_escrows_provider ON escrows(provider_address);
 CREATE INDEX IF NOT EXISTS idx_escrows_status ON escrows(status);
 CREATE INDEX IF NOT EXISTS idx_escrows_deadline ON escrows(deadline);
 CREATE INDEX IF NOT EXISTS idx_escrows_created ON escrows(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_escrows_chain ON escrows(chain);
 CREATE INDEX IF NOT EXISTS idx_proofs_escrow ON proofs(escrow_address);
 CREATE INDEX IF NOT EXISTS idx_disputes_escrow ON disputes(escrow_address);
 `;
@@ -137,13 +139,14 @@ export async function upsertEscrow(escrow: {
   deadline: Date;
   grace_period: number;
   tx_signature?: string;
+  chain?: string;
 }) {
   return query(
     `INSERT INTO escrows (
       escrow_address, client_address, provider_address, arbitrator_address,
       token_mint, amount, status, verification_type, task_hash,
-      deadline, grace_period, tx_signature
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      deadline, grace_period, tx_signature, chain
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
     ON CONFLICT (escrow_address)
     DO UPDATE SET status = $7, updated_at = NOW()`,
     [
@@ -159,6 +162,7 @@ export async function upsertEscrow(escrow: {
       escrow.deadline,
       escrow.grace_period,
       escrow.tx_signature || null,
+      escrow.chain || "solana",
     ]
   );
 }

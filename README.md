@@ -1,16 +1,19 @@
 # EscrowAgent
 
-**Trustless escrow for autonomous agent-to-agent transactions on Solana.**
+**Trustless escrow for autonomous agent-to-agent transactions on Solana and Base.**
 
-Agents escrow funds, define success criteria, and auto-settle based on verifiable outcomes — no trust required.
+Agents escrow funds, define success criteria, and auto-settle based on verifiable outcomes — no trust required. Works on Solana (SPL tokens) and Base (ERC-20 tokens).
 
 ```bash
-$ npx escrowagent status
+$ npx escrowagent info
 
-  ● Program:    8rXSN62qT7hb3DkcYrMmi6osPxak7nhXi2cBGDNbh7Py
-  ● Status:     DEPLOYED
-  ● Network:    Devnet
-  ● Protocol:   INITIALIZED
+  Solana:
+    Program ID:  8rXSN62qT7hb3DkcYrMmi6osPxak7nhXi2cBGDNbh7Py
+    Network:     Devnet / Mainnet-Beta
+
+  Base (EVM):
+    Chain ID:    8453 (mainnet) / 84532 (sepolia)
+    Explorer:    https://basescan.org
 ```
 
 ---
@@ -23,13 +26,13 @@ Agent A locks funds in an on-chain vault. Agent B does the work. Proof is verifi
 Agent A (Client)                    Agent B (Provider)
      │                                    │
      │  vault.createEscrow(...)           │
-     │───────────► Solana ◄───────────────│  vault.acceptEscrow(...)
-     │                                    │
+     │───────────► Chain ◄────────────────│  vault.acceptEscrow(...)
+     │          (Solana or Base)          │
      │                                    │  ... does the work ...
      │                                    │
      │                                    │  vault.submitProof(...)
      │  vault.confirmCompletion()         │
-     │───────────► Solana                 │  ← funds released
+     │───────────► Chain                  │  ← funds released
      │                                    │
      └──────────── Dashboard ─────────────┘  (humans monitor)
 ```
@@ -38,11 +41,25 @@ No human in the loop. Funds cannot move until program conditions are met.
 
 ---
 
+## Supported Chains
+
+| Chain | Contract | Token Standard | Status |
+|-------|----------|---------------|--------|
+| **Solana** | Anchor program (`8rXSN62...`) | SPL Token | Live on Devnet |
+| **Base** | Solidity contract (Foundry) | ERC-20 | Ready to deploy |
+
+Both chains share the same escrow lifecycle, fee structure, and SDK interface. Agents don't need to know which chain they're on — the SDK handles it.
+
+---
+
 ## Quick Start
 
 ```bash
 # Add EscrowAgent to your agent project
 $ npx escrowagent init
+
+# Initialize for Base chain specifically
+$ npx escrowagent init --chain base
 
 # Check protocol status
 $ npx escrowagent status
@@ -54,21 +71,21 @@ $ npx escrowagent mcp
 ### Install the SDK
 
 ```bash
-npm install @escrowagent/sdk
+npm install escrowagent-sdk
 ```
 
-### Create Your First Escrow
+### Create Your First Escrow (Solana)
 
 ```typescript
-import { EscrowAgent, USDC_DEVNET_MINT } from "@escrowagent/sdk";
+import { AgentVault, USDC_DEVNET_MINT } from "escrowagent-sdk";
 import { Connection, Keypair } from "@solana/web3.js";
 
-const vault = new EscrowAgent({
+const vault = new AgentVault({
+  chain: "solana",
   connection: new Connection("https://api.devnet.solana.com"),
   wallet: agentKeypair,
 });
 
-// Agent A creates an escrow
 const escrow = await vault.createEscrow({
   provider: "AgentBpubkey...",
   amount: 50_000_000,             // 50 USDC
@@ -81,7 +98,6 @@ const escrow = await vault.createEscrow({
   verification: "OnChain",
 });
 
-// Agent B accepts, works, and proves
 await vault.acceptEscrow(escrow.escrowAddress);
 await vault.submitProof(escrow.escrowAddress, {
   type: "TransactionSignature",
@@ -89,39 +105,67 @@ await vault.submitProof(escrow.escrowAddress, {
 });
 ```
 
+### Create Your First Escrow (Base)
+
+```typescript
+import { AgentVault, USDC_BASE } from "escrowagent-sdk";
+
+const vault = new AgentVault({
+  chain: "base",
+  privateKey: process.env.PRIVATE_KEY,      // 0x...
+  contractAddress: process.env.CONTRACT_ADDR, // 0x...
+  rpcUrl: "https://mainnet.base.org",
+  chainId: 8453,
+});
+
+// Same API as Solana — zero code changes needed
+const escrow = await vault.createEscrow({
+  provider: "0xProviderAddress...",
+  amount: 50_000_000,
+  tokenMint: USDC_BASE,                       // USDC on Base
+  deadline: Date.now() + 600_000,
+  task: {
+    description: "Execute a swap on Uniswap",
+    criteria: [{ type: "TransactionExecuted", description: "Swap tx confirmed" }],
+  },
+  verification: "MultiSigConfirm",
+});
+```
+
 ### Python
 
 ```python
-from escrowagent import EscrowAgent
+from escrowagent import AgentVault
 
-vault = EscrowAgent(
-    rpc_url="https://api.devnet.solana.com",
-    keypair=agent_keypair,
-)
+# Solana
+vault = AgentVault(chain="solana", rpc_url="https://api.devnet.solana.com", keypair=kp)
 
-escrow = await vault.create_escrow(
-    provider="AgentBpubkey...",
-    amount=50_000_000,
-    token_mint=USDC_MINT,
-    deadline_seconds=600,
-    task={"description": "Swap USDC to SOL", "criteria": [...]},
-)
+# Base
+vault = AgentVault(chain="base", rpc_url="https://mainnet.base.org",
+                   private_key="0x...", contract_address="0x...")
+
+escrow = await vault.create_escrow(params)
+```
+
+```bash
+# Install with Base support
+pip install escrowagent-sdk[base]
 ```
 
 ---
 
 ## AI Agent Tools
 
-EscrowAgent isn't just an SDK — it's a set of **tools that AI agents can autonomously decide to use.**
+EscrowAgent isn't just an SDK — it's a set of **tools that AI agents can autonomously decide to use.** Works identically on Solana and Base.
 
 ### LangChain
 
 ```bash
-npm install @escrowagent/agent-tools @langchain/core
+npm install escrowagent-agent-tools @langchain/core
 ```
 
 ```typescript
-import { createLangChainTools } from "@escrowagent/agent-tools";
+import { createLangChainTools } from "escrowagent-agent-tools";
 
 const tools = createLangChainTools(vault);
 const agent = createReactAgent({ llm, tools });
@@ -131,7 +175,7 @@ const agent = createReactAgent({ llm, tools });
 ### Vercel AI SDK
 
 ```typescript
-import { createVercelAITools } from "@escrowagent/agent-tools";
+import { createVercelAITools } from "escrowagent-agent-tools";
 
 const tools = createVercelAITools(vault);
 const { text } = await generateText({ model, tools, prompt });
@@ -189,19 +233,17 @@ Add to your Claude Desktop config:
 │   AI Tools: LangChain │ Vercel AI │ MCP (Claude)     │
 └──────────────────────┬──────────────────────────────┘
                        │
-       ────────────────┼──────────────
-       SOLANA          │
-       ────────────────┼──────────────
-                       │
-           ┌───────────▼───────────┐
-           │   EscrowAgent Program  │
-           │                       │
-           │   • Escrow Manager    │
-           │   • Verification      │
-           │   • Dispute System    │
-           │   • Protocol Config   │
-           │   • Fee Collector     │
-           └───────────┬───────────┘
+       ┌───────────────┼───────────────┐
+       │               │               │
+   SOLANA          SHARED          BASE
+       │               │               │
+   ┌───▼───┐    ┌──────▼──────┐   ┌───▼───┐
+   │Anchor │    │ TypeScript  │   │Solidity│
+   │Program│    │ SDK (viem + │   │Contract│
+   │(Rust) │    │   anchor)   │   │(EVM)  │
+   └───┬───┘    └──────┬──────┘   └───┬───┘
+       │               │               │
+       └───────────────┼───────────────┘
                        │
            ┌───────────▼───────────┐
            │    Off-Chain Layer    │
@@ -215,17 +257,21 @@ Add to your Claude Desktop config:
 | Component | Path | Description |
 |-----------|------|-------------|
 | Solana Program | `programs/escrowagent/` | Anchor smart contract — 10 instructions, full escrow lifecycle |
-| TypeScript SDK | `sdk/typescript/` | `@escrowagent/sdk` — agent-facing client library |
-| Python SDK | `sdk/python/` | `escrowagent-sdk` — Python client with anchorpy |
+| Base Contract | `contracts/` | Solidity/Foundry smart contract — same 10 functions, ERC-20 support |
+| TypeScript SDK | `sdk/typescript/` | `escrowagent-sdk` — multi-chain client (Solana + Base via factory) |
+| Python SDK | `sdk/python/` | `escrowagent-sdk` — multi-chain Python client |
 | Agent Tools | `sdk/agent-tools/` | LangChain, Vercel AI SDK, and MCP adapters |
-| CLI | `sdk/cli/` | `npx escrowagent` — init, mcp, status |
-| Indexer + API | `indexer/` | Event listener + Fastify REST API + PostgreSQL |
-| Dashboard | `dashboard/` | Next.js 15 + Tailwind CSS 4 monitoring UI |
-| Tests | `tests/` | 9 passing integration tests |
+| CLI | `sdk/cli/` | `npx escrowagent` — init, mcp, status, info (with `--chain` flag) |
+| Indexer + API | `indexer/` | Dual-chain event listener + Fastify REST API + PostgreSQL |
+| Dashboard | `dashboard/` | Next.js 15 + Tailwind CSS 4 monitoring UI with chain selector |
+| Solana Tests | `tests/` | Anchor integration tests |
+| Base Tests | `contracts/test/` | Foundry tests (18 passing) |
 
 ---
 
 ## Escrow Lifecycle
+
+The same lifecycle applies on both Solana and Base:
 
 ```
 CREATE → AwaitingProvider
@@ -251,18 +297,17 @@ CREATE → AwaitingProvider
 
 ## Protocol Config
 
-The protocol is governed by an on-chain `ProtocolConfig` PDA:
+Both chains share the same configuration structure:
 
-| Field | Description |
-|-------|-------------|
-| `admin` | Only key that can update config |
-| `fee_wallet` | Token account receiving protocol fees |
-| `protocol_fee_bps` | Fee rate (50 = 0.5%) |
-| `arbitrator_fee_bps` | Dispute fee (100 = 1.0%) |
-| `min/max_escrow_amount` | Anti-spam limits |
-| `paused` | Emergency stop switch |
-
-Admin can be transferred to a multisig for decentralized governance.
+| Field | Solana | Base |
+|-------|--------|------|
+| Admin | `ProtocolConfig` PDA | `admin` state variable |
+| Fee wallet | `fee_authority` | `feeAuthority` |
+| Protocol fee | 50 bps (0.5%) | 50 bps (0.5%) |
+| Arbitrator fee | 100 bps (1.0%) | 100 bps (1.0%) |
+| Pause mechanism | `paused` flag on PDA | OpenZeppelin `Pausable` |
+| Token custody | PDA vault account | Contract holds ERC-20 directly |
+| Security | Anchor constraints | ReentrancyGuard + SafeERC20 |
 
 ---
 
@@ -270,34 +315,73 @@ Admin can be transferred to a multisig for decentralized governance.
 
 ### Prerequisites
 
-- Rust, Solana CLI, Anchor CLI 0.32.1, Node.js 20+
+- **Solana:** Rust, Solana CLI, Anchor CLI 0.32.1, Node.js 20+
+- **Base:** Foundry (forge, cast, anvil)
 
 ### Build & Test
 
 ```bash
+# Install dependencies
 npm install
+
+# Solana
 anchor build
-anchor test    # 9 passing tests
+anchor test
+
+# Base
+cd contracts
+forge build
+forge test -vv    # 18 passing tests
 ```
 
 ### Deploy
 
 ```bash
+# Solana → Devnet
 ./scripts/deploy.sh --network devnet
 npx tsx scripts/initialize_protocol.ts <fee-wallet-address>
+
+# Base → Sepolia (testnet)
+cd contracts
+forge script script/Deploy.s.sol --rpc-url https://sepolia.base.org --broadcast --verify
+
+# Base → Mainnet
+forge script script/Deploy.s.sol --rpc-url https://mainnet.base.org --broadcast --verify
 ```
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for the full guide.
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for the full Solana guide.
+
+**Base deployment requirements:**
+- ETH on Base for gas (bridge via [bridge.base.org](https://bridge.base.org))
+- Deployer private key (`DEPLOYER_PRIVATE_KEY` env var)
+- Basescan API key for contract verification (`BASESCAN_API_KEY`)
 
 ### Run Locally
 
 ```bash
-# Terminal 1: Indexer
+# Terminal 1: Indexer (listens to both chains)
 cd indexer && cp .env.example .env && npm install && npm run dev
 
 # Terminal 2: Dashboard
 cd dashboard && npm install && npm run dev
 # Open http://localhost:3000
+```
+
+### Environment Variables
+
+```env
+# Solana
+SOLANA_RPC_URL=https://api.devnet.solana.com
+AGENT_PRIVATE_KEY=[keypair,bytes]
+
+# Base
+BASE_RPC_URL=https://sepolia.base.org
+BASE_PRIVATE_KEY=0x...
+BASE_CONTRACT_ADDRESS=0x...
+BASESCAN_API_KEY=...
+
+# Shared
+ESCROWAGENT_INDEXER_URL=http://localhost:3001
 ```
 
 ---
@@ -306,19 +390,43 @@ cd dashboard && npm install && npm run dev
 
 | | |
 |---|---|
-| **Program ID** | `8rXSN62qT7hb3DkcYrMmi6osPxak7nhXi2cBGDNbh7Py` |
-| **Network** | Solana Devnet |
-| **npm** | [`escrowagent`](https://www.npmjs.com/package/escrowagent) |
-| **GitHub** | [`cruellacodes/escrowagent`](https://github.com/cruellacodes/escrowagent) |
+| **Solana Program ID** | `8rXSN62qT7hb3DkcYrMmi6osPxak7nhXi2cBGDNbh7Py` |
+| **Solana Network** | Devnet |
+| **Base Contract** | Deploy with `forge script` (see above) |
+| **Base Network** | Mainnet (8453) / Sepolia (84532) |
+| **npm** | [`escrowagent-sdk`](https://www.npmjs.com/package/escrowagent-sdk) |
+| **PyPI** | [`escrowagent-sdk`](https://pypi.org/project/escrowagent-sdk/) |
+| **GitHub** | [`cruellacodes/escrow-agent`](https://github.com/cruellacodes/escrow-agent) |
+
+---
+
+## Publishing to npm / PyPI
+
+After making changes, republish the packages:
+
+```bash
+# TypeScript SDK (v0.2.0 — adds Base support)
+cd sdk/typescript && npm publish
+
+# Agent Tools
+cd sdk/agent-tools && npm publish
+
+# CLI
+cd sdk/cli && npm run build && npm publish
+
+# Python SDK
+cd sdk/python && python -m build && twine upload dist/*
+```
 
 ---
 
 ## Roadmap
 
-- **Phase 1 (now):** Core escrow, MultiSig + OnChain verification, TS/Python SDKs, AI agent tools, devnet
-- **Phase 2:** Oracle verification, decentralized arbitrator pool, multi-token support, **Token-2022 (SPL Token Extensions)** — requires migrating `Account<'info, TokenAccount>` / `Account<'info, Mint>` to `InterfaceAccount` and `Program<'info, Token>` to `Interface<'info, TokenInterface>`, mainnet
-- **Phase 3:** Escrow templates, batch escrows, agent discovery marketplace
-- **Phase 4:** Agent Router, streaming payments, cross-chain, governance
+- **Phase 1 (done):** Core escrow, MultiSig + OnChain verification, TS/Python SDKs, AI agent tools, devnet
+- **Phase 2 (now):** Multi-chain support (Solana + Base), Foundry tests, dual-chain indexer, chain selector UI
+- **Phase 3:** Oracle verification, decentralized arbitrator pool, Token-2022, Base mainnet launch
+- **Phase 4:** Escrow templates, batch escrows, agent discovery marketplace
+- **Phase 5:** Agent Router, streaming payments, more EVM chains (Arbitrum, Optimism), governance
 
 ## License
 

@@ -8,7 +8,7 @@
  */
 
 import { DynamicStructuredTool } from "@langchain/core/tools";
-import type { AgentVault } from "@escrowagent/sdk";
+import type { AgentVault } from "escrowagent-sdk";
 import { TOOL_DEFINITIONS } from "./definitions";
 import { ToolExecutor } from "./executor";
 

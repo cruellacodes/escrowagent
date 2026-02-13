@@ -18,20 +18,29 @@ ${MAGENTA}${BOLD}    ╔══════════════════�
 
 const args = process.argv.slice(2);
 const command = args[0];
+const chainFlag = args.find(a => a.startsWith("--chain="))?.split("=")[1]
+  || (args.includes("--chain") ? args[args.indexOf("--chain") + 1] : undefined);
+const selectedChain = chainFlag === "base" ? "base" : "solana";
 
 function printHelp() {
   console.log(LOGO);
-  console.log(`${BOLD}Usage:${RESET}  npx escrowagent ${CYAN}<command>${RESET}\n`);
+  console.log(`${BOLD}Usage:${RESET}  npx escrowagent ${CYAN}<command>${RESET} [--chain solana|base]\n`);
   console.log(`${BOLD}Commands:${RESET}`);
   console.log(`  ${CYAN}init${RESET}          Scaffold EscrowAgent into your agent project`);
   console.log(`  ${CYAN}mcp${RESET}           Start the MCP server (for Claude, Cursor, etc.)`);
   console.log(`  ${CYAN}status${RESET}        Check protocol status on devnet/mainnet`);
-  console.log(`  ${CYAN}info${RESET}          Show program ID and config`);
+  console.log(`  ${CYAN}info${RESET}          Show program IDs and config`);
   console.log(`  ${CYAN}help${RESET}          Show this help message`);
+  console.log();
+  console.log(`${BOLD}Flags:${RESET}`);
+  console.log(`  ${CYAN}--chain${RESET}       Chain to use: solana (default) or base`);
   console.log();
   console.log(`${BOLD}Examples:${RESET}`);
   console.log(`  ${DIM}# Add EscrowAgent escrow skills to your agent${RESET}`);
   console.log(`  ${GREEN}$ npx escrowagent init${RESET}`);
+  console.log();
+  console.log(`  ${DIM}# Initialize for Base chain${RESET}`);
+  console.log(`  ${GREEN}$ npx escrowagent init --chain base${RESET}`);
   console.log();
   console.log(`  ${DIM}# Start MCP server for Claude Desktop${RESET}`);
   console.log(`  ${GREEN}$ npx escrowagent mcp${RESET}`);
@@ -56,17 +65,17 @@ async function init() {
   }
 
   // Install SDK dependencies
-  console.log(`${CYAN}Installing @escrowagent/sdk...${RESET}`);
+  console.log(`${CYAN}Installing escrowagent-sdk...${RESET}`);
   const { execSync } = await import("child_process");
 
   try {
-    execSync("npm install @escrowagent/sdk @solana/web3.js @solana/spl-token", {
+    execSync("npm install escrowagent-sdk @solana/web3.js @solana/spl-token", {
       cwd,
       stdio: "inherit",
     });
   } catch {
     console.log(`${YELLOW}npm install failed. You can install manually:${RESET}`);
-    console.log(`  npm install @escrowagent/sdk @solana/web3.js @solana/spl-token`);
+    console.log(`  npm install escrowagent-sdk @solana/web3.js @solana/spl-token`);
   }
 
   // Create example agent file
@@ -74,7 +83,7 @@ async function init() {
   if (!fs.existsSync(examplePath)) {
     fs.writeFileSync(
       examplePath,
-      `import { AgentVault, USDC_DEVNET_MINT } from "@escrowagent/sdk";
+      `import { AgentVault, USDC_DEVNET_MINT } from "escrowagent-sdk";
 import { Connection, Keypair } from "@solana/web3.js";
 
 // ── Configure your agent's vault connection ──
@@ -125,9 +134,19 @@ async function example() {
     fs.writeFileSync(
       envPath,
       `# EscrowAgent Configuration
+
+# ── Solana ──
 SOLANA_RPC_URL=https://api.devnet.solana.com
 AGENT_PRIVATE_KEY=  # Your agent's keypair as JSON array
+
+# ── Base (EVM) ──
+BASE_RPC_URL=https://sepolia.base.org
+BASE_PRIVATE_KEY=   # Your agent's EVM private key (0x...)
+BASE_CONTRACT_ADDRESS=  # Deployed EscrowAgent contract address
+
+# ── Shared ──
 ESCROWAGENT_INDEXER_URL=http://localhost:3001
+ESCROWAGENT_CHAIN=solana  # Default chain: solana or base
 `
     );
     console.log(`${GREEN}Created${RESET} .env.escrowagent`);
@@ -148,12 +167,12 @@ ${BOLD}Next steps:${RESET}
 ${BOLD}For AI agent frameworks:${RESET}
 
   ${DIM}# LangChain${RESET}
-  npm install @escrowagent/agent-tools @langchain/core
-  ${DIM}import { createLangChainTools } from "@escrowagent/agent-tools";${RESET}
+  npm install escrowagent-agent-tools @langchain/core
+  ${DIM}import { createLangChainTools } from "escrowagent-agent-tools";${RESET}
 
   ${DIM}# Vercel AI SDK${RESET}
-  npm install @escrowagent/agent-tools ai
-  ${DIM}import { createVercelAITools } from "@escrowagent/agent-tools";${RESET}
+  npm install escrowagent-agent-tools ai
+  ${DIM}import { createVercelAITools } from "escrowagent-agent-tools";${RESET}
 
   ${DIM}# Claude MCP Server${RESET}
   npx escrowagent mcp
@@ -202,13 +221,13 @@ async function mcp() {
 }
 `);
 
-  // The actual MCP server implementation would be imported from @escrowagent/agent-tools
+  // The actual MCP server implementation would be imported from escrowagent-agent-tools
   // For now, we provide the setup instructions
-  // In production: import { createMCPServer } from "@escrowagent/agent-tools";
+  // In production: import { createMCPServer } from "escrowagent-agent-tools";
   // const { listen } = createMCPServer(vault);
   // await listen();
 
-  console.error(`${YELLOW}Note: Install @escrowagent/agent-tools for full MCP server: npm install @escrowagent/agent-tools${RESET}`);
+  console.error(`${YELLOW}Note: Install escrowagent-agent-tools for full MCP server: npm install escrowagent-agent-tools${RESET}`);
 }
 
 async function status() {
@@ -259,13 +278,24 @@ async function status() {
 function info() {
   console.log(LOGO);
   console.log(`${BOLD}EscrowAgent Protocol Info${RESET}\n`);
-  console.log(`  Program ID:    ${WHITE}8rXSN62qT7hb3DkcYrMmi6osPxak7nhXi2cBGDNbh7Py${RESET}`);
-  console.log(`  Network:       Solana Devnet`);
-  console.log(`  Protocol Fee:  0.5%`);
-  console.log(`  Arbitrator Fee: 1.0%`);
-  console.log(`  GitHub:        ${CYAN}https://github.com/cruellacodes/escrow-agent${RESET}`);
-  console.log(`  SDK:           npm install @escrowagent/sdk`);
-  console.log(`  Agent Tools:   npm install @escrowagent/agent-tools`);
+
+  console.log(`  ${BOLD}Solana:${RESET}`);
+  console.log(`    Program ID:  ${WHITE}8rXSN62qT7hb3DkcYrMmi6osPxak7nhXi2cBGDNbh7Py${RESET}`);
+  console.log(`    Network:     Devnet / Mainnet-Beta`);
+  console.log();
+
+  console.log(`  ${BOLD}Base (EVM):${RESET}`);
+  console.log(`    Contract:    ${WHITE}${process.env.BASE_CONTRACT_ADDRESS || "(not deployed yet)"}${RESET}`);
+  console.log(`    Chain ID:    8453 (mainnet) / 84532 (sepolia)`);
+  console.log(`    Explorer:    ${CYAN}https://basescan.org${RESET}`);
+  console.log();
+
+  console.log(`  ${BOLD}Shared:${RESET}`);
+  console.log(`    Protocol Fee:  0.5%`);
+  console.log(`    Arbitrator Fee: 1.0%`);
+  console.log(`    GitHub:        ${CYAN}https://github.com/cruellacodes/escrow-agent${RESET}`);
+  console.log(`    SDK:           npm install escrowagent-sdk`);
+  console.log(`    Agent Tools:   npm install escrowagent-agent-tools`);
   console.log();
 }
 

@@ -13,7 +13,7 @@
  *   npx tsx examples/langchain-agent.ts
  */
 
-import { AgentVault, USDC_DEVNET_MINT } from "@escrowagent/sdk";
+import { AgentVault, USDC_DEVNET_MINT } from "escrowagent-sdk";
 import { createLangChainTools } from "../src/langchain";
 import { Connection, Keypair } from "@solana/web3.js";
 
