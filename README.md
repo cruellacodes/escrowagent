@@ -349,7 +349,7 @@ forge script script/Deploy.s.sol --rpc-url https://sepolia.base.org --broadcast 
 forge script script/Deploy.s.sol --rpc-url https://mainnet.base.org --broadcast --verify
 ```
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for the full Solana guide.
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for the full Solana guide and [DEPLOYMENT_BASE.md](./DEPLOYMENT_BASE.md) for Base + infrastructure setup (Supabase, Render, Vercel).
 
 **Base deployment requirements:**
 - ETH on Base for gas (bridge via [bridge.base.org](https://bridge.base.org))
