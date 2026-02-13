@@ -367,24 +367,9 @@ class AgentVault:
     ) -> str:
         """Submit proof of task completion as the provider."""
         escrow_pk = Pubkey.from_string(escrow_address)
-        vault_pda, _ = _derive_vault_pda(escrow_pk, self.program_id)
-        vault_authority_pda, _ = _derive_vault_authority_pda(
-            escrow_pk, self.program_id
-        )
         config_pda, _ = _derive_config_pda(self.program_id)
 
         program = await self._get_program()
-        escrow_data = await program.account["Escrow"].fetch(escrow_pk)
-
-        token_mint_pk = (
-            escrow_data.token_mint
-            if isinstance(escrow_data.token_mint, Pubkey)
-            else Pubkey.from_string(str(escrow_data.token_mint))
-        )
-        provider_token_account = _get_associated_token_address(
-            self.pubkey, token_mint_pk
-        )
-        protocol_fee_account = await self._get_protocol_fee_account()
 
         proof_type_enum = ProofType(proof_type) if isinstance(proof_type, str) else proof_type
         proof_type_idl = _proof_type_to_idl(proof_type_enum)
@@ -402,11 +387,6 @@ class AgentVault:
                     "provider": self.pubkey,
                     "config": config_pda,
                     "escrow": escrow_pk,
-                    "escrow_vault": vault_pda,
-                    "escrow_vault_authority": vault_authority_pda,
-                    "provider_token_account": provider_token_account,
-                    "protocol_fee_account": protocol_fee_account,
-                    "token_program": TOKEN_PROGRAM_ID,
                 },
                 signers=[self.keypair],
             ),
@@ -497,6 +477,7 @@ class AgentVault:
     async def raise_dispute(self, escrow_address: str, reason: str) -> str:
         """Raise a dispute on an escrow."""
         escrow_pk = Pubkey.from_string(escrow_address)
+        config_pda, _ = _derive_config_pda(self.program_id)
 
         if self.indexer_url:
             await self._http.post(
@@ -514,6 +495,7 @@ class AgentVault:
             ctx=Context(
                 accounts={
                     "raiser": self.pubkey,
+                    "config": config_pda,
                     "escrow": escrow_pk,
                 },
                 signers=[self.keypair],
@@ -568,6 +550,7 @@ class AgentVault:
             ctx=Context(
                 accounts={
                     "arbitrator": self.pubkey,
+                    "client": client_pk,
                     "config": config_pda,
                     "escrow": escrow_pk,
                     "escrow_vault": vault_pda,

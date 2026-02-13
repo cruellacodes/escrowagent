@@ -218,9 +218,9 @@ pub fn resolve_handler(
 
             let client_amount = (distributable as u128)
                 .checked_mul(client_bps as u128)
-                .unwrap()
+                .ok_or(AgentVaultError::Overflow)?
                 .checked_div(10_000)
-                .unwrap() as u64;
+                .ok_or(AgentVaultError::Overflow)? as u64;
             let provider_amount = distributable - client_amount;
 
             if client_amount > 0 {
@@ -277,6 +277,23 @@ pub fn resolve_handler(
             signer_seeds,
         );
         token::transfer(transfer_fee, protocol_fee)?;
+    }
+
+    // H-1: Sweep any remaining vault balance to the client.
+    // This handles griefing tokens sent directly to the vault PDA.
+    ctx.accounts.escrow_vault.reload()?;
+    let remainder = ctx.accounts.escrow_vault.amount;
+    if remainder > 0 {
+        let transfer_remainder = CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            Transfer {
+                from: ctx.accounts.escrow_vault.to_account_info(),
+                to: ctx.accounts.client_token_account.to_account_info(),
+                authority: ctx.accounts.escrow_vault_authority.to_account_info(),
+            },
+            signer_seeds,
+        );
+        token::transfer(transfer_remainder, remainder)?;
     }
 
     // M-1: Close vault token account, return rent to client

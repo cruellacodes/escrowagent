@@ -21,6 +21,7 @@ import {
   deriveEscrowPDA,
   deriveVaultPDA,
   deriveVaultAuthorityPDA,
+  deriveProtocolConfigPDA,
   hashTask,
   toPublicKey,
 } from "./utils";
@@ -102,6 +103,7 @@ export class SolanaEscrowClient implements IEscrowClient {
     };
 
     const program = await this.getProgram();
+    const [configPDA] = deriveProtocolConfigPDA(this.programId);
 
     const tx = await program.methods
       .createEscrow(
@@ -117,11 +119,11 @@ export class SolanaEscrowClient implements IEscrowClient {
         provider,
         arbitrator,
         escrow: escrowPDA,
+        config: configPDA,
         tokenMint,
         clientTokenAccount,
         escrowVault: vaultPDA,
         escrowVaultAuthority: vaultAuthorityPDA,
-        protocolFeeAccount: this.protocolFeeAccount,
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: anchor.web3.SystemProgram.programId,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
@@ -142,12 +144,14 @@ export class SolanaEscrowClient implements IEscrowClient {
   async acceptEscrow(escrowAddress: string): Promise<string> {
     const escrowPubkey = new PublicKey(escrowAddress);
     const program = await this.getProgram();
+    const [configPDA] = deriveProtocolConfigPDA(this.programId);
 
     return program.methods
       .acceptEscrow()
       .accounts({
         provider: this.wallet.publicKey,
         escrow: escrowPubkey,
+        config: configPDA,
       })
       .signers([this.wallet])
       .rpc();
@@ -158,19 +162,8 @@ export class SolanaEscrowClient implements IEscrowClient {
     proof: SubmitProofParams
   ): Promise<string> {
     const escrowPubkey = new PublicKey(escrowAddress);
-    const [vaultPDA] = deriveVaultPDA(escrowPubkey, this.programId);
-    const [vaultAuthorityPDA] = deriveVaultAuthorityPDA(
-      escrowPubkey,
-      this.programId
-    );
-
     const program = await this.getProgram();
-    const escrowData = await program.account.escrow.fetch(escrowPubkey);
-
-    const providerTokenAccount = await getAssociatedTokenAddress(
-      escrowData.tokenMint,
-      this.wallet.publicKey
-    );
+    const [configPDA] = deriveProtocolConfigPDA(this.programId);
 
     const proofBuffer = Buffer.alloc(64);
     const rawData =
@@ -187,12 +180,8 @@ export class SolanaEscrowClient implements IEscrowClient {
       .submitProof(proofTypeMap[proof.type], Array.from(proofBuffer))
       .accounts({
         provider: this.wallet.publicKey,
+        config: configPDA,
         escrow: escrowPubkey,
-        escrowVault: vaultPDA,
-        escrowVaultAuthority: vaultAuthorityPDA,
-        providerTokenAccount,
-        protocolFeeAccount: this.protocolFeeAccount,
-        tokenProgram: TOKEN_PROGRAM_ID,
       })
       .signers([this.wallet])
       .rpc();
@@ -207,6 +196,7 @@ export class SolanaEscrowClient implements IEscrowClient {
     );
 
     const program = await this.getProgram();
+    const [configPDA] = deriveProtocolConfigPDA(this.programId);
     const escrowData = await program.account.escrow.fetch(escrowPubkey);
 
     const providerTokenAccount = await getAssociatedTokenAddress(
@@ -219,6 +209,7 @@ export class SolanaEscrowClient implements IEscrowClient {
       .accounts({
         client: this.wallet.publicKey,
         escrow: escrowPubkey,
+        config: configPDA,
         escrowVault: vaultPDA,
         escrowVaultAuthority: vaultAuthorityPDA,
         providerTokenAccount,
@@ -238,6 +229,7 @@ export class SolanaEscrowClient implements IEscrowClient {
     );
 
     const program = await this.getProgram();
+    const [configPDA] = deriveProtocolConfigPDA(this.programId);
     const escrowData = await program.account.escrow.fetch(escrowPubkey);
 
     const clientTokenAccount = await getAssociatedTokenAddress(
@@ -250,6 +242,7 @@ export class SolanaEscrowClient implements IEscrowClient {
       .accounts({
         client: this.wallet.publicKey,
         escrow: escrowPubkey,
+        config: configPDA,
         escrowVault: vaultPDA,
         escrowVaultAuthority: vaultAuthorityPDA,
         clientTokenAccount,
@@ -269,17 +262,22 @@ export class SolanaEscrowClient implements IEscrowClient {
   ): Promise<string> {
     const escrowPubkey = new PublicKey(escrowAddress);
     const program = await this.getProgram();
+    const [configPDA] = deriveProtocolConfigPDA(this.programId);
 
     if (this.indexerUrl) {
-      await fetch(`${this.indexerUrl}/disputes`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          escrowAddress,
-          raisedBy: this.wallet.publicKey.toBase58(),
-          reason: params.reason,
-        }),
-      });
+      try {
+        await fetch(`${this.indexerUrl}/disputes`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            escrowAddress,
+            raisedBy: this.wallet.publicKey.toBase58(),
+            reason: params.reason,
+          }),
+        });
+      } catch (e) {
+        console.warn("Failed to store dispute off-chain:", e);
+      }
     }
 
     return program.methods
@@ -287,6 +285,7 @@ export class SolanaEscrowClient implements IEscrowClient {
       .accounts({
         raiser: this.wallet.publicKey,
         escrow: escrowPubkey,
+        config: configPDA,
       })
       .signers([this.wallet])
       .rpc();
@@ -304,6 +303,7 @@ export class SolanaEscrowClient implements IEscrowClient {
     );
 
     const program = await this.getProgram();
+    const [configPDA] = deriveProtocolConfigPDA(this.programId);
     const escrowData = await program.account.escrow.fetch(escrowPubkey);
 
     const clientTokenAccount = await getAssociatedTokenAddress(
@@ -341,7 +341,9 @@ export class SolanaEscrowClient implements IEscrowClient {
       .resolveDispute(rulingArg)
       .accounts({
         arbitrator: this.wallet.publicKey,
+        client: escrowData.client,
         escrow: escrowPubkey,
+        config: configPDA,
         escrowVault: vaultPDA,
         escrowVaultAuthority: vaultAuthorityPDA,
         clientTokenAccount,
@@ -377,6 +379,7 @@ export class SolanaEscrowClient implements IEscrowClient {
   async getEscrow(escrowAddress: string): Promise<EscrowInfo> {
     if (this.indexerUrl) {
       const res = await fetch(`${this.indexerUrl}/escrows/${escrowAddress}`);
+      if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
       return res.json() as Promise<EscrowInfo>;
     }
 
@@ -398,6 +401,7 @@ export class SolanaEscrowClient implements IEscrowClient {
       const res = await fetch(
         `${this.indexerUrl}/escrows?${params.toString()}`
       );
+      if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
       return res.json() as Promise<EscrowInfo[]>;
     }
 

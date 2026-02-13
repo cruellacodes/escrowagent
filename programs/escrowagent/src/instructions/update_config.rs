@@ -50,6 +50,7 @@ pub fn handler(
     let config = &mut ctx.accounts.config;
 
     if let Some(fee_authority) = update.fee_authority {
+        require!(fee_authority != Pubkey::default(), AgentVaultError::InvalidFeeAccount);
         config.fee_authority = fee_authority;
         msg!("Fee authority updated to {}", fee_authority);
     }
@@ -99,6 +100,14 @@ pub fn handler(
             new_admin
         );
         config.admin = new_admin;
+    }
+
+    // ── L-4: Cross-validate escrow amount bounds ──
+    if config.max_escrow_amount > 0 {
+        require!(
+            config.max_escrow_amount >= config.min_escrow_amount,
+            AgentVaultError::BelowMinimumAmount
+        );
     }
 
     Ok(())

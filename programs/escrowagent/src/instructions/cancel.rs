@@ -60,7 +60,9 @@ pub fn handler(ctx: Context<CancelEscrow>) -> Result<()> {
     let clock = Clock::get()?;
     let escrow = &mut ctx.accounts.escrow;
 
-    let refund_amount = escrow.amount;
+    // H-1: Use actual vault balance instead of escrow.amount to handle
+    // griefing tokens sent directly to the vault PDA.
+    let refund_amount = ctx.accounts.escrow_vault.amount;
 
     let escrow_key = escrow.key();
     let vault_authority_bump = ctx.bumps.escrow_vault_authority;

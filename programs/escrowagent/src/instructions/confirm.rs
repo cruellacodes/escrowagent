@@ -68,6 +68,14 @@ pub struct ConfirmCompletion<'info> {
     )]
     pub protocol_fee_account: Account<'info, TokenAccount>,
 
+    /// Client's token account to receive any vault remainder (H-1 griefing fix)
+    #[account(
+        mut,
+        constraint = client_token_account.owner == client.key(),
+        constraint = client_token_account.mint == escrow.token_mint,
+    )]
+    pub client_token_account: Account<'info, TokenAccount>,
+
     pub token_program: Program<'info, Token>,
 }
 
@@ -111,6 +119,23 @@ pub fn handler(ctx: Context<ConfirmCompletion>) -> Result<()> {
             signer_seeds,
         );
         token::transfer(transfer_fee, protocol_fee)?;
+    }
+
+    // H-1: Sweep any remaining vault balance to the client.
+    // This handles griefing tokens sent directly to the vault PDA.
+    ctx.accounts.escrow_vault.reload()?;
+    let remainder = ctx.accounts.escrow_vault.amount;
+    if remainder > 0 {
+        let transfer_remainder = CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            Transfer {
+                from: ctx.accounts.escrow_vault.to_account_info(),
+                to: ctx.accounts.client_token_account.to_account_info(),
+                authority: ctx.accounts.escrow_vault_authority.to_account_info(),
+            },
+            signer_seeds,
+        );
+        token::transfer(transfer_remainder, remainder)?;
     }
 
     // M-1: Close vault token account, return rent to client

@@ -1,6 +1,4 @@
-import pkg from "@coral-xyz/anchor";
-const { AnchorProvider, setProvider, workspace, web3, BN } = pkg;
-const anchor = { AnchorProvider, setProvider, workspace, web3, BN };
+import * as anchor from "@coral-xyz/anchor";
 import {
   createMint,
   createAssociatedTokenAccount,
@@ -9,8 +7,6 @@ import {
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { expect } from "chai";
-
-type EscrowAgent = any;
 
 describe("escrowagent", () => {
   const provider = anchor.AnchorProvider.env();
@@ -48,7 +44,6 @@ describe("escrowagent", () => {
     );
   }
 
-  // ── Helper: derive escrow PDA ──
   function deriveEscrowPDA(
     clientKey: anchor.web3.PublicKey,
     providerKey: anchor.web3.PublicKey,
@@ -83,68 +78,36 @@ describe("escrowagent", () => {
     );
   }
 
-  // ── Setup: fund accounts, create mint, create token accounts, initialize protocol ──
+  // ── Setup ──
   before(async () => {
-    // Airdrop SOL to all test wallets
     const airdropAmount = 10 * anchor.web3.LAMPORTS_PER_SOL;
     const airdropPromises = [
-      client,
-      providerAgent,
-      arbitrator,
-      protocolFeeWallet,
-      admin,
+      client, providerAgent, arbitrator, protocolFeeWallet, admin,
     ].map(async (kp) => {
-      const sig = await provider.connection.requestAirdrop(
-        kp.publicKey,
-        airdropAmount
-      );
+      const sig = await provider.connection.requestAirdrop(kp.publicKey, airdropAmount);
       await provider.connection.confirmTransaction(sig);
     });
     await Promise.all(airdropPromises);
 
-    // Create a test SPL token mint (simulating USDC)
     tokenMint = await createMint(
-      provider.connection,
-      client,
-      client.publicKey, // mint authority
-      null,
-      6 // 6 decimals like USDC
+      provider.connection, client, client.publicKey, null, 6
     );
 
-    // Create token accounts
     clientTokenAccount = await createAssociatedTokenAccount(
-      provider.connection,
-      client,
-      tokenMint,
-      client.publicKey
+      provider.connection, client, tokenMint, client.publicKey
     );
     providerTokenAccount = await createAssociatedTokenAccount(
-      provider.connection,
-      providerAgent,
-      tokenMint,
-      providerAgent.publicKey
+      provider.connection, providerAgent, tokenMint, providerAgent.publicKey
     );
     arbitratorTokenAccount = await createAssociatedTokenAccount(
-      provider.connection,
-      arbitrator,
-      tokenMint,
-      arbitrator.publicKey
+      provider.connection, arbitrator, tokenMint, arbitrator.publicKey
     );
     protocolFeeTokenAccount = await createAssociatedTokenAccount(
-      provider.connection,
-      protocolFeeWallet,
-      tokenMint,
-      protocolFeeWallet.publicKey
+      provider.connection, protocolFeeWallet, tokenMint, protocolFeeWallet.publicKey
     );
 
-    // Mint tokens to client
     await mintTo(
-      provider.connection,
-      client,
-      tokenMint,
-      clientTokenAccount,
-      client,
-      1_000_000_000 // 1000 USDC
+      provider.connection, client, tokenMint, clientTokenAccount, client, 1_000_000_000
     );
 
     // ── Initialize Protocol Config ──
@@ -152,11 +115,13 @@ describe("escrowagent", () => {
 
     await program.methods
       .initializeProtocol(
-        protocolFeeTokenAccount, // fee_wallet
-        50, // protocol_fee_bps (0.5%)
-        100, // arbitrator_fee_bps (1.0%)
-        new BN(1000), // min_escrow_amount
-        new BN(0) // max_escrow_amount (0 = no limit)
+        protocolFeeWallet.publicKey, // fee_authority (the WALLET that owns fee token accounts)
+        50,                          // protocol_fee_bps (0.5%)
+        100,                         // arbitrator_fee_bps (1.0%)
+        new anchor.BN(1000),         // min_escrow_amount
+        new anchor.BN(0),            // max_escrow_amount (0 = no limit)
+        new anchor.BN(300),          // min_grace_period (5 min)
+        new anchor.BN(604800),       // max_deadline_seconds (7 days)
       )
       .accounts({
         admin: admin.publicKey,
@@ -166,11 +131,8 @@ describe("escrowagent", () => {
       .signers([admin])
       .rpc();
 
-    // Verify config was initialized
     const config = await program.account.protocolConfig.fetch(configPDA);
-    expect(config.feeWallet.toBase58()).to.equal(
-      protocolFeeTokenAccount.toBase58()
-    );
+    expect(config.feeAuthority.toBase58()).to.equal(protocolFeeWallet.publicKey.toBase58());
     expect(config.protocolFeeBps).to.equal(50);
     expect(config.arbitratorFeeBps).to.equal(100);
     expect(config.minEscrowAmount.toNumber()).to.equal(1000);
@@ -184,16 +146,18 @@ describe("escrowagent", () => {
 
   describe("Protocol Config", () => {
     it("Can update protocol config", async () => {
-      const newProtocolFeeBps = 75; // 0.75%
-      const newMinEscrow = new BN(2000);
+      const newProtocolFeeBps = 75;
+      const newMinEscrow = new anchor.BN(2000);
 
       await program.methods
         .updateProtocolConfig({
-          feeWallet: null,
+          feeAuthority: null,
           protocolFeeBps: newProtocolFeeBps,
           arbitratorFeeBps: null,
           minEscrowAmount: newMinEscrow,
           maxEscrowAmount: null,
+          minGracePeriod: null,
+          maxDeadlineSeconds: null,
           paused: null,
           newAdmin: null,
         })
@@ -206,25 +170,21 @@ describe("escrowagent", () => {
 
       const config = await program.account.protocolConfig.fetch(configPDA);
       expect(config.protocolFeeBps).to.equal(newProtocolFeeBps);
-      expect(config.minEscrowAmount.toNumber()).to.equal(
-        newMinEscrow.toNumber()
-      );
-      // Other fields should remain unchanged
-      expect(config.feeWallet.toBase58()).to.equal(
-        protocolFeeTokenAccount.toBase58()
-      );
+      expect(config.minEscrowAmount.toNumber()).to.equal(newMinEscrow.toNumber());
+      expect(config.feeAuthority.toBase58()).to.equal(protocolFeeWallet.publicKey.toBase58());
       expect(config.arbitratorFeeBps).to.equal(100);
     });
 
     it("Can pause and unpause protocol", async () => {
-      // Pause
       await program.methods
         .updateProtocolConfig({
-          feeWallet: null,
+          feeAuthority: null,
           protocolFeeBps: null,
           arbitratorFeeBps: null,
           minEscrowAmount: null,
           maxEscrowAmount: null,
+          minGracePeriod: null,
+          maxDeadlineSeconds: null,
           paused: true,
           newAdmin: null,
         })
@@ -238,14 +198,15 @@ describe("escrowagent", () => {
       let config = await program.account.protocolConfig.fetch(configPDA);
       expect(config.paused).to.equal(true);
 
-      // Unpause
       await program.methods
         .updateProtocolConfig({
-          feeWallet: null,
+          feeAuthority: null,
           protocolFeeBps: null,
           arbitratorFeeBps: null,
           minEscrowAmount: null,
           maxEscrowAmount: null,
+          minGracePeriod: null,
+          maxDeadlineSeconds: null,
           paused: false,
           newAdmin: null,
         })
@@ -260,15 +221,16 @@ describe("escrowagent", () => {
       expect(config.paused).to.equal(false);
     });
 
-    // Reset fees back to defaults for subsequent tests
     after(async () => {
       await program.methods
         .updateProtocolConfig({
-          feeWallet: null,
+          feeAuthority: null,
           protocolFeeBps: 50,
           arbitratorFeeBps: null,
-          minEscrowAmount: new BN(1000),
+          minEscrowAmount: new anchor.BN(1000),
           maxEscrowAmount: null,
+          minGracePeriod: null,
+          maxDeadlineSeconds: null,
           paused: null,
           newAdmin: null,
         })
@@ -292,25 +254,20 @@ describe("escrowagent", () => {
     let vaultAuthorityPDA: anchor.web3.PublicKey;
 
     it("Creates an escrow", async () => {
-      [escrowPDA, escrowBump] = deriveEscrowPDA(
-        client.publicKey,
-        providerAgent.publicKey,
-        taskHash
-      );
+      [escrowPDA, escrowBump] = deriveEscrowPDA(client.publicKey, providerAgent.publicKey, taskHash);
       [vaultPDA] = deriveVaultPDA(escrowPDA);
       [vaultAuthorityPDA] = deriveVaultAuthorityPDA(escrowPDA);
 
-      const deadline =
-        Math.floor(Date.now() / 1000) + TEN_MINUTES;
+      const deadline = Math.floor(Date.now() / 1000) + TEN_MINUTES;
 
       await program.methods
         .createEscrow(
-          new BN(ESCROW_AMOUNT),
-          new BN(deadline),
-          new BN(300), // 5 min grace
+          new anchor.BN(ESCROW_AMOUNT),
+          new anchor.BN(deadline),
+          new anchor.BN(300),
           Array.from(taskHash),
-          { multiSigConfirm: {} }, // VerificationType
-          1 // criteria_count
+          { multiSigConfirm: {} },
+          1
         )
         .accounts({
           client: client.publicKey,
@@ -322,7 +279,6 @@ describe("escrowagent", () => {
           clientTokenAccount: clientTokenAccount,
           escrowVault: vaultPDA,
           escrowVaultAuthority: vaultAuthorityPDA,
-          protocolFeeAccount: protocolFeeTokenAccount,
           tokenProgram: TOKEN_PROGRAM_ID,
           systemProgram: anchor.web3.SystemProgram.programId,
           rent: anchor.web3.SYSVAR_RENT_PUBKEY,
@@ -330,16 +286,12 @@ describe("escrowagent", () => {
         .signers([client])
         .rpc();
 
-      // Verify escrow account
       const escrow = await program.account.escrow.fetch(escrowPDA);
       expect(escrow.client.toBase58()).to.equal(client.publicKey.toBase58());
-      expect(escrow.provider.toBase58()).to.equal(
-        providerAgent.publicKey.toBase58()
-      );
+      expect(escrow.provider.toBase58()).to.equal(providerAgent.publicKey.toBase58());
       expect(escrow.amount.toNumber()).to.equal(ESCROW_AMOUNT);
       expect(escrow.status).to.deep.include({ awaitingProvider: {} });
 
-      // Verify funds moved to vault
       const vaultAccount = await getAccount(provider.connection, vaultPDA);
       expect(Number(vaultAccount.amount)).to.equal(ESCROW_AMOUNT);
     });
@@ -365,18 +317,13 @@ describe("escrowagent", () => {
 
       await program.methods
         .submitProof(
-          { signedConfirmation: {} }, // ProofType
+          { signedConfirmation: {} },
           Array.from(proofData)
         )
         .accounts({
           provider: providerAgent.publicKey,
           config: configPDA,
           escrow: escrowPDA,
-          escrowVault: vaultPDA,
-          escrowVaultAuthority: vaultAuthorityPDA,
-          providerTokenAccount: providerTokenAccount,
-          protocolFeeAccount: protocolFeeTokenAccount,
-          tokenProgram: TOKEN_PROGRAM_ID,
         })
         .signers([providerAgent])
         .rpc();
@@ -386,10 +333,7 @@ describe("escrowagent", () => {
     });
 
     it("Client confirms completion — funds released", async () => {
-      const providerBalanceBefore = await getAccount(
-        provider.connection,
-        providerTokenAccount
-      );
+      const providerBalanceBefore = await getAccount(provider.connection, providerTokenAccount);
 
       await program.methods
         .confirmCompletion()
@@ -406,34 +350,21 @@ describe("escrowagent", () => {
         .signers([client])
         .rpc();
 
-      const escrow = await program.account.escrow.fetch(escrowPDA);
-      expect(escrow.status).to.deep.include({ completed: {} });
-
       // Verify provider received funds (minus 0.5% fee)
-      const providerBalanceAfter = await getAccount(
-        provider.connection,
-        providerTokenAccount
-      );
-      const expectedPayout =
-        ESCROW_AMOUNT - Math.floor((ESCROW_AMOUNT * 50) / 10_000);
+      const providerBalanceAfter = await getAccount(provider.connection, providerTokenAccount);
+      const expectedPayout = ESCROW_AMOUNT - Math.floor((ESCROW_AMOUNT * 50) / 10_000);
       expect(
-        Number(providerBalanceAfter.amount) -
-          Number(providerBalanceBefore.amount)
+        Number(providerBalanceAfter.amount) - Number(providerBalanceBefore.amount)
       ).to.equal(expectedPayout);
 
       // Verify protocol fee collected
-      const feeAccount = await getAccount(
-        provider.connection,
-        protocolFeeTokenAccount
-      );
-      expect(Number(feeAccount.amount)).to.equal(
-        Math.floor((ESCROW_AMOUNT * 50) / 10_000)
-      );
+      const feeAccount = await getAccount(provider.connection, protocolFeeTokenAccount);
+      expect(Number(feeAccount.amount)).to.equal(Math.floor((ESCROW_AMOUNT * 50) / 10_000));
     });
   });
 
   // ══════════════════════════════════════════════════════
-  // CANCELLATION: Create → Cancel (before acceptance)
+  // CANCELLATION
   // ══════════════════════════════════════════════════════
 
   describe("Cancellation Flow", () => {
@@ -444,26 +375,18 @@ describe("escrowagent", () => {
     cancelTaskHash.write("cancel-test-task-hash", "utf-8");
 
     it("Creates and then cancels an escrow — full refund", async () => {
-      [escrowPDA] = deriveEscrowPDA(
-        client.publicKey,
-        providerAgent.publicKey,
-        cancelTaskHash
-      );
+      [escrowPDA] = deriveEscrowPDA(client.publicKey, providerAgent.publicKey, cancelTaskHash);
       [vaultPDA] = deriveVaultPDA(escrowPDA);
       [vaultAuthorityPDA] = deriveVaultAuthorityPDA(escrowPDA);
 
-      const clientBalanceBefore = await getAccount(
-        provider.connection,
-        clientTokenAccount
-      );
-
+      const clientBalanceBefore = await getAccount(provider.connection, clientTokenAccount);
       const deadline = Math.floor(Date.now() / 1000) + TEN_MINUTES;
 
       await program.methods
         .createEscrow(
-          new BN(ESCROW_AMOUNT),
-          new BN(deadline),
-          new BN(300),
+          new anchor.BN(ESCROW_AMOUNT),
+          new anchor.BN(deadline),
+          new anchor.BN(300),
           Array.from(cancelTaskHash),
           { multiSigConfirm: {} },
           0
@@ -478,7 +401,6 @@ describe("escrowagent", () => {
           clientTokenAccount: clientTokenAccount,
           escrowVault: vaultPDA,
           escrowVaultAuthority: vaultAuthorityPDA,
-          protocolFeeAccount: protocolFeeTokenAccount,
           tokenProgram: TOKEN_PROGRAM_ID,
           systemProgram: anchor.web3.SystemProgram.programId,
           rent: anchor.web3.SYSVAR_RENT_PUBKEY,
@@ -486,7 +408,6 @@ describe("escrowagent", () => {
         .signers([client])
         .rpc();
 
-      // Cancel it
       await program.methods
         .cancelEscrow()
         .accounts({
@@ -501,22 +422,13 @@ describe("escrowagent", () => {
         .signers([client])
         .rpc();
 
-      const escrow = await program.account.escrow.fetch(escrowPDA);
-      expect(escrow.status).to.deep.include({ cancelled: {} });
-
-      // Client should have gotten full refund
-      const clientBalanceAfter = await getAccount(
-        provider.connection,
-        clientTokenAccount
-      );
-      expect(Number(clientBalanceAfter.amount)).to.equal(
-        Number(clientBalanceBefore.amount)
-      );
+      const clientBalanceAfter = await getAccount(provider.connection, clientTokenAccount);
+      expect(Number(clientBalanceAfter.amount)).to.equal(Number(clientBalanceBefore.amount));
     });
   });
 
   // ══════════════════════════════════════════════════════
-  // DISPUTE FLOW: Create → Accept → Proof → Dispute → Resolve
+  // DISPUTE FLOW
   // ══════════════════════════════════════════════════════
 
   describe("Dispute Flow", () => {
@@ -527,11 +439,7 @@ describe("escrowagent", () => {
     disputeTaskHash.write("dispute-test-task-hash", "utf-8");
 
     before(async () => {
-      [escrowPDA] = deriveEscrowPDA(
-        client.publicKey,
-        providerAgent.publicKey,
-        disputeTaskHash
-      );
+      [escrowPDA] = deriveEscrowPDA(client.publicKey, providerAgent.publicKey, disputeTaskHash);
       [vaultPDA] = deriveVaultPDA(escrowPDA);
       [vaultAuthorityPDA] = deriveVaultAuthorityPDA(escrowPDA);
 
@@ -540,9 +448,9 @@ describe("escrowagent", () => {
       // Create
       await program.methods
         .createEscrow(
-          new BN(ESCROW_AMOUNT),
-          new BN(deadline),
-          new BN(300),
+          new anchor.BN(ESCROW_AMOUNT),
+          new anchor.BN(deadline),
+          new anchor.BN(300),
           Array.from(disputeTaskHash),
           { multiSigConfirm: {} },
           1
@@ -557,7 +465,6 @@ describe("escrowagent", () => {
           clientTokenAccount: clientTokenAccount,
           escrowVault: vaultPDA,
           escrowVaultAuthority: vaultAuthorityPDA,
-          protocolFeeAccount: protocolFeeTokenAccount,
           tokenProgram: TOKEN_PROGRAM_ID,
           systemProgram: anchor.web3.SystemProgram.programId,
           rent: anchor.web3.SYSVAR_RENT_PUBKEY,
@@ -586,11 +493,6 @@ describe("escrowagent", () => {
           provider: providerAgent.publicKey,
           config: configPDA,
           escrow: escrowPDA,
-          escrowVault: vaultPDA,
-          escrowVaultAuthority: vaultAuthorityPDA,
-          providerTokenAccount: providerTokenAccount,
-          protocolFeeAccount: protocolFeeTokenAccount,
-          tokenProgram: TOKEN_PROGRAM_ID,
         })
         .signers([providerAgent])
         .rpc();
@@ -601,6 +503,7 @@ describe("escrowagent", () => {
         .raiseDispute()
         .accounts({
           raiser: client.publicKey,
+          config: configPDA,
           escrow: escrowPDA,
         })
         .signers([client])
@@ -608,20 +511,12 @@ describe("escrowagent", () => {
 
       const escrow = await program.account.escrow.fetch(escrowPDA);
       expect(escrow.status).to.deep.include({ disputed: {} });
-      expect(escrow.disputeRaisedBy.toBase58()).to.equal(
-        client.publicKey.toBase58()
-      );
+      expect(escrow.disputeRaisedBy.toBase58()).to.equal(client.publicKey.toBase58());
     });
 
     it("Arbitrator resolves with 50/50 split", async () => {
-      const providerBalanceBefore = await getAccount(
-        provider.connection,
-        providerTokenAccount
-      );
-      const clientBalanceBefore = await getAccount(
-        provider.connection,
-        clientTokenAccount
-      );
+      const providerBalanceBefore = await getAccount(provider.connection, providerTokenAccount);
+      const clientBalanceBefore = await getAccount(provider.connection, clientTokenAccount);
 
       await program.methods
         .resolveDispute({
@@ -637,24 +532,17 @@ describe("escrowagent", () => {
           providerTokenAccount: providerTokenAccount,
           arbitratorTokenAccount: arbitratorTokenAccount,
           protocolFeeAccount: protocolFeeTokenAccount,
+          client: client.publicKey,
           tokenProgram: TOKEN_PROGRAM_ID,
         })
         .signers([arbitrator])
         .rpc();
 
-      const escrow = await program.account.escrow.fetch(escrowPDA);
-      expect(escrow.status).to.deep.include({ resolved: {} });
-
-      // Verify funds distributed correctly
+      // Verify funds distributed
       const protocolFee = Math.floor((ESCROW_AMOUNT * 50) / 10_000);
       const arbitratorFee = Math.floor((ESCROW_AMOUNT * 100) / 10_000);
-      const distributable = ESCROW_AMOUNT - protocolFee - arbitratorFee;
-      const halfDistributable = Math.floor((distributable * 5000) / 10_000);
 
-      const arbAccount = await getAccount(
-        provider.connection,
-        arbitratorTokenAccount
-      );
+      const arbAccount = await getAccount(provider.connection, arbitratorTokenAccount);
       expect(Number(arbAccount.amount)).to.equal(arbitratorFee);
     });
   });

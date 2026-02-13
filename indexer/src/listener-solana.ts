@@ -124,18 +124,6 @@ export class EventListener {
               "Resolved"
             );
             break;
-          case "ProtocolInitialized":
-            console.log(
-              `[Event] ProtocolInitialized in tx ${txSignature}`,
-              event.data
-            );
-            break;
-          case "ProtocolConfigUpdated":
-            console.log(
-              `[Event] ProtocolConfigUpdated in tx ${txSignature}`,
-              event.data
-            );
-            break;
           default:
             console.log(
               `[Event] Unhandled event ${(event as { name: string }).name} in tx ${txSignature}`
@@ -230,12 +218,19 @@ export class EventListener {
   ): Promise<void> {
     const escrowAddress = (data.escrow as { toBase58: () => string }).toBase58();
 
+    const completedAtRaw = data.completed_at ?? data.completedAt ?? data.completed_at;
     const completedAt =
-      newStatus === "Completed" && typeof data.completed_at === "number"
-        ? new Date((data.completed_at as number) * 1000)
-        : undefined;
+        newStatus === "Completed" && completedAtRaw
+            ? new Date(Number(String(completedAtRaw)) * 1000)
+            : undefined;
 
     await db.updateEscrowStatus(escrowAddress, newStatus, completedAt);
+
+    if (newStatus === "Completed") {
+        const amountPaid = data.amount_paid ?? data.amountPaid;
+        const feeCollected = data.fee_collected ?? data.feeCollected;
+        if (amountPaid) console.log(`[Handler] Completed: paid=${amountPaid}, fee=${feeCollected}`);
+    }
 
     console.log(
       `[Handler] Updated escrow ${escrowAddress} to ${newStatus} (tx ${txSignature})`

@@ -124,6 +124,12 @@ pub fn handler(
         );
     }
 
+    // ── Reject OracleCallback (not yet supported) ──
+    require!(
+        !matches!(verification_type, VerificationType::OracleCallback),
+        AgentVaultError::VerificationTypeMismatch
+    );
+
     // ── M-3: Grace period must meet protocol minimum ──
     require!(grace_period >= 0, AgentVaultError::InvalidGracePeriod);
     require!(

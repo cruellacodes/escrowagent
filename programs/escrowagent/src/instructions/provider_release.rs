@@ -74,6 +74,14 @@ pub struct ProviderRelease<'info> {
     )]
     pub protocol_fee_account: Account<'info, TokenAccount>,
 
+    /// Client's token account to receive any vault remainder (H-1 griefing fix)
+    #[account(
+        mut,
+        constraint = client_token_account.owner == escrow.client,
+        constraint = client_token_account.mint == escrow.token_mint,
+    )]
+    pub client_token_account: Account<'info, TokenAccount>,
+
     /// CHECK: The original client, receives vault rent on close
     #[account(
         mut,
@@ -88,10 +96,15 @@ pub fn handler(ctx: Context<ProviderRelease>) -> Result<()> {
     let clock = Clock::get()?;
     let escrow = &mut ctx.accounts.escrow;
 
-    // Time gate: confirmation period must have elapsed.
-    // Provider can self-release only after proof_submitted_at + grace_period.
+    // H-2: Time gate — provider can self-release only after BOTH:
+    //   1. proof_submitted_at + grace_period  (confirmation timeout)
+    //   2. deadline + grace_period            (deadline timeout)
+    // Using max() prevents early release when proof is submitted before deadline.
+    let release_after_proof = escrow.proof_submitted_at + escrow.grace_period;
+    let release_after_deadline = escrow.deadline + escrow.grace_period;
+    let release_time = std::cmp::max(release_after_proof, release_after_deadline);
     require!(
-        clock.unix_timestamp > escrow.proof_submitted_at + escrow.grace_period,
+        clock.unix_timestamp > release_time,
         AgentVaultError::AutoReleaseNotReady
     );
 
@@ -131,6 +144,23 @@ pub fn handler(ctx: Context<ProviderRelease>) -> Result<()> {
             signer_seeds,
         );
         token::transfer(transfer_fee, protocol_fee)?;
+    }
+
+    // H-1: Sweep any remaining vault balance to the client.
+    // This handles griefing tokens sent directly to the vault PDA.
+    ctx.accounts.escrow_vault.reload()?;
+    let remainder = ctx.accounts.escrow_vault.amount;
+    if remainder > 0 {
+        let transfer_remainder = CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            Transfer {
+                from: ctx.accounts.escrow_vault.to_account_info(),
+                to: ctx.accounts.client_token_account.to_account_info(),
+                authority: ctx.accounts.escrow_vault_authority.to_account_info(),
+            },
+            signer_seeds,
+        );
+        token::transfer(transfer_remainder, remainder)?;
     }
 
     // Close vault token account, return rent to client

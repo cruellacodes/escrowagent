@@ -53,7 +53,8 @@ pub fn handler(
     require!(protocol_fee_bps <= 500, AgentVaultError::FeeTooHigh);     // max 5%
     require!(arbitrator_fee_bps <= 500, AgentVaultError::FeeTooHigh);   // max 5%
     require!(min_escrow_amount > 0, AgentVaultError::AmountZero);
-    require!(min_grace_period >= 0, AgentVaultError::InvalidGracePeriod);
+    require!(fee_authority != Pubkey::default(), AgentVaultError::InvalidFeeAccount);
+    require!(min_grace_period > 0, AgentVaultError::InvalidGracePeriod);
     require!(max_deadline_seconds > 0, AgentVaultError::DeadlineInPast);
 
     let config = &mut ctx.accounts.config;
