@@ -1,6 +1,8 @@
-import { Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
+import { Connection, Keypair, PublicKey, Transaction, VersionedTransaction } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from "@solana/spl-token";
 import * as anchor from "@coral-xyz/anchor";
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import {
   AgentVaultConfig,
@@ -49,9 +51,9 @@ export class AgentVault {
   private connection: Connection;
   private wallet: Keypair;
   private programId: PublicKey;
-  private program: anchor.Program | null = null;
+  private program: any = null; // anchor.Program with dynamic IDL
   private indexerUrl: string | null;
-  private protocolFeeAccount: PublicKey | null;
+  private protocolFeeAccount: PublicKey;
 
   constructor(config: AgentVaultConfig) {
     this.connection =
@@ -65,7 +67,7 @@ export class AgentVault {
     this.indexerUrl = config.indexerUrl || null;
     this.protocolFeeAccount = config.protocolFeeAccount
       ? toPublicKey(config.protocolFeeAccount)
-      : null;
+      : PublicKey.default;
   }
 
   // ──────────────────────────────────────────────────────
@@ -556,24 +558,31 @@ export class AgentVault {
   // INTERNAL HELPERS
   // ──────────────────────────────────────────────────────
 
-  private async getProgram(): Promise<anchor.Program> {
+  private async getProgram(): Promise<any> {
     if (this.program) return this.program;
 
     // In production, load IDL from chain or bundled JSON
     // For now, we create a minimal provider
+    const walletAdapter = {
+      publicKey: this.wallet.publicKey,
+      signAllTransactions: async <T extends Transaction | VersionedTransaction>(txs: T[]): Promise<T[]> => {
+        for (const tx of txs) {
+          if (tx instanceof Transaction) {
+            tx.sign(this.wallet);
+          }
+        }
+        return txs;
+      },
+      signTransaction: async <T extends Transaction | VersionedTransaction>(tx: T): Promise<T> => {
+        if (tx instanceof Transaction) {
+          tx.sign(this.wallet);
+        }
+        return tx;
+      },
+    };
     const anchorProvider = new anchor.AnchorProvider(
       this.connection,
-      {
-        publicKey: this.wallet.publicKey,
-        signAllTransactions: async (txs: Transaction[]) => {
-          txs.forEach((tx) => tx.sign(this.wallet));
-          return txs;
-        },
-        signTransaction: async (tx: Transaction) => {
-          tx.sign(this.wallet);
-          return tx;
-        },
-      },
+      walletAdapter,
       { commitment: "confirmed" }
     );
 
