@@ -98,13 +98,30 @@ export default async function EscrowDetailPage({
           <h1 className="text-[28px] font-bold tracking-tight">
             Escrow Detail
           </h1>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <span className="rounded-lg bg-[var(--surface)] px-3 py-1.5 font-mono text-[12px] text-[var(--text-secondary)]">
               {address}
             </span>
             <span className={`badge ${statusBadge(escrow.status)}`}>
               {escrow.status}
             </span>
+            {escrow.tx_signature && (
+              <a
+                href={
+                  escrow.chain === "base"
+                    ? `https://sepolia.basescan.org/tx/${escrow.tx_signature}`
+                    : `https://solscan.io/tx/${escrow.tx_signature}?cluster=devnet`
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--accent-soft)] px-3 py-1.5 text-[12px] font-semibold text-[var(--accent)] transition-all hover:bg-[var(--accent)] hover:text-white"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
+                </svg>
+                View on {escrow.chain === "base" ? "Basescan" : "Solscan"}
+              </a>
+            )}
           </div>
         </div>
       </div>
