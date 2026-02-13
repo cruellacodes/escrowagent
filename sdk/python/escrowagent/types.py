@@ -1,4 +1,4 @@
-"""Type definitions for the AgentVault Python SDK."""
+"""Type definitions for the EscrowAgent Python SDK."""
 
 from __future__ import annotations
 

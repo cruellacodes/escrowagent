@@ -10,13 +10,13 @@ import {
 } from "@solana/spl-token";
 import { expect } from "chai";
 
-type AgentVault = any;
+type EscrowAgent = any;
 
-describe("agentvault", () => {
+describe("escrowagent", () => {
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 
-  const program = anchor.workspace.Agentvault as any;
+  const program = anchor.workspace.Escrowagent as any;
 
   // ── Test keypairs ──
   const client = anchor.web3.Keypair.generate();

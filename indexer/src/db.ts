@@ -7,7 +7,7 @@ import { Pool, PoolClient } from "pg";
 const pool = new Pool({
   connectionString:
     process.env.DATABASE_URL ||
-    "postgresql://localhost:5432/agentvault",
+    "postgresql://localhost:5432/escrowagent",
   max: 20,
   idleTimeoutMillis: 30_000,
   connectionTimeoutMillis: 5_000,

@@ -1,28 +1,28 @@
 /**
- * Vercel AI SDK tools adapter for AgentVault.
+ * Vercel AI SDK tools adapter for EscrowAgent.
  *
  * Usage:
- *   import { createVercelAITools } from "@agentvault/agent-tools";
+ *   import { createVercelAITools } from "@escrowagent/agent-tools";
  *   const tools = createVercelAITools(vault);
  *   const result = await generateText({ model, tools, prompt });
  */
 
 import { tool } from "ai";
-import type { AgentVault } from "@agentvault/sdk";
+import type { AgentVault } from "@escrowagent/sdk";
 import { TOOL_DEFINITIONS } from "./definitions";
 import { ToolExecutor } from "./executor";
 
 /**
- * Create Vercel AI SDK tools from an AgentVault SDK instance.
+ * Create Vercel AI SDK tools from an EscrowAgent SDK instance.
  *
- * @param vault - Initialized AgentVault client
+ * @param vault - Initialized EscrowAgent client
  * @param toolNames - Optional list of tool names to include (default: all)
  * @returns Record of tool name → Vercel AI tool
  *
  * @example
  * ```ts
- * import { AgentVault } from "@agentvault/sdk";
- * import { createVercelAITools } from "@agentvault/agent-tools";
+ * import { AgentVault } from "@escrowagent/sdk";
+ * import { createVercelAITools } from "@escrowagent/agent-tools";
  * import { generateText } from "ai";
  * import { openai } from "@ai-sdk/openai";
  *

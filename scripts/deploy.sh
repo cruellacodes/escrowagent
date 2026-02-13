@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# AgentVault Deployment Script
+# EscrowAgent Deployment Script
 # Automates building, program ID extraction, file updates, and deployment
 
 set -euo pipefail
@@ -71,7 +71,7 @@ if [[ "$NETWORK" == "mainnet" ]]; then
 fi
 
 echo -e "${BLUE}╔════════════════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║     AgentVault Deployment Script                     ║${NC}"
+echo -e "${BLUE}║     EscrowAgent Deployment Script                     ║${NC}"
 echo -e "${BLUE}║     Network: $NETWORK${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════════════════════╝${NC}"
 echo ""
@@ -185,7 +185,7 @@ echo -e "${GREEN}✓ Build successful${NC}"
 echo ""
 echo -e "${BLUE}[3/7] Extracting program ID...${NC}"
 
-KEYPAIR_FILE="$PROJECT_ROOT/target/deploy/agentvault-keypair.json"
+KEYPAIR_FILE="$PROJECT_ROOT/target/deploy/escrowagent-keypair.json"
 
 if [[ ! -f "$KEYPAIR_FILE" ]]; then
   echo -e "${RED}✗ Keypair file not found: $KEYPAIR_FILE${NC}"
@@ -233,7 +233,7 @@ update_with_sed() {
 }
 
 # 1. lib.rs - update declare_id!
-LIB_RS="$PROJECT_ROOT/programs/agentvault/src/lib.rs"
+LIB_RS="$PROJECT_ROOT/programs/escrowagent/src/lib.rs"
 if [[ -f "$LIB_RS" ]]; then
   if update_with_sed "$LIB_RS" \
     'declare_id!("[^"]*")' \
@@ -248,9 +248,9 @@ if [[ -f "$ANCHOR_TOML" ]]; then
   # Update devnet section
   if [[ "$NETWORK" == "devnet" ]] || [[ "$NETWORK" == "mainnet" ]]; then
     if [[ "$OSTYPE" == "darwin"* ]]; then
-      sed -i '' "/^\[programs\.devnet\]/,/^\[/ s|agentvault = \".*\"|agentvault = \"$PROGRAM_ID\"|" "$ANCHOR_TOML"
+      sed -i '' "/^\[programs\.devnet\]/,/^\[/ s|escrowagent = \".*\"|escrowagent = \"$PROGRAM_ID\"|" "$ANCHOR_TOML"
     else
-      sed -i "/^\[programs\.devnet\]/,/^\[/ s|agentvault = \".*\"|agentvault = \"$PROGRAM_ID\"|" "$ANCHOR_TOML"
+      sed -i "/^\[programs\.devnet\]/,/^\[/ s|escrowagent = \".*\"|escrowagent = \"$PROGRAM_ID\"|" "$ANCHOR_TOML"
     fi
     echo -e "${GREEN}✓ Updated: Anchor.toml (devnet)${NC}"
     ((FILES_UPDATED++))
@@ -258,9 +258,9 @@ if [[ -f "$ANCHOR_TOML" ]]; then
   
   # Update localnet section
   if [[ "$OSTYPE" == "darwin"* ]]; then
-    sed -i '' "/^\[programs\.localnet\]/,/^\[/ s|agentvault = \".*\"|agentvault = \"$PROGRAM_ID\"|" "$ANCHOR_TOML"
+    sed -i '' "/^\[programs\.localnet\]/,/^\[/ s|escrowagent = \".*\"|escrowagent = \"$PROGRAM_ID\"|" "$ANCHOR_TOML"
   else
-    sed -i "/^\[programs\.localnet\]/,/^\[/ s|agentvault = \".*\"|agentvault = \"$PROGRAM_ID\"|" "$ANCHOR_TOML"
+    sed -i "/^\[programs\.localnet\]/,/^\[/ s|escrowagent = \".*\"|escrowagent = \"$PROGRAM_ID\"|" "$ANCHOR_TOML"
   fi
   echo -e "${GREEN}✓ Updated: Anchor.toml (localnet)${NC}"
   ((FILES_UPDATED++))
@@ -281,7 +281,7 @@ if [[ -f "$UTILS_TS" ]]; then
 fi
 
 # 4. SDK Python client.py
-CLIENT_PY="$PROJECT_ROOT/sdk/python/agentvault/client.py"
+CLIENT_PY="$PROJECT_ROOT/sdk/python/escrowagent/client.py"
 if [[ -f "$CLIENT_PY" ]]; then
   # Replace program ID string
   if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -289,7 +289,7 @@ if [[ -f "$CLIENT_PY" ]]; then
   else
     sed -i "s|Pubkey\.from_string(\"AgntVLT[^\"]*\"|Pubkey.from_string(\"$PROGRAM_ID\"|g" "$CLIENT_PY"
   fi
-  echo -e "${GREEN}✓ Updated: sdk/python/agentvault/client.py${NC}"
+  echo -e "${GREEN}✓ Updated: sdk/python/escrowagent/client.py${NC}"
   ((FILES_UPDATED++))
 fi
 

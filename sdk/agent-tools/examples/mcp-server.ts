@@ -1,5 +1,5 @@
 /**
- * Example: MCP Server for AgentVault
+ * Example: MCP Server for EscrowAgent
  *
  * Run this as a separate process, then connect from any MCP client
  * (Claude Desktop, Cursor, etc.)
@@ -10,7 +10,7 @@
  * Then in your MCP client config:
  *   {
  *     "mcpServers": {
- *       "agentvault": {
+ *       "escrowagent": {
  *         "command": "npx",
  *         "args": ["tsx", "path/to/mcp-server.ts"],
  *         "env": {
@@ -22,7 +22,7 @@
  *   }
  */
 
-import { AgentVault } from "@agentvault/sdk";
+import { AgentVault } from "@escrowagent/sdk";
 import { createMCPServer } from "../src/mcp";
 import { Connection, Keypair } from "@solana/web3.js";
 
@@ -35,7 +35,7 @@ async function main() {
     const secretKey = JSON.parse(process.env.WALLET_SECRET_KEY);
     wallet = Keypair.fromSecretKey(Uint8Array.from(secretKey));
   } else {
-    console.error("[AgentVault MCP] Warning: No WALLET_SECRET_KEY set, using random keypair");
+    console.error("[EscrowAgent MCP] Warning: No WALLET_SECRET_KEY set, using random keypair");
     wallet = Keypair.generate();
   }
 
@@ -45,14 +45,14 @@ async function main() {
     indexerUrl: process.env.INDEXER_URL || "http://localhost:3001",
   });
 
-  console.error(`[AgentVault MCP] Wallet: ${wallet.publicKey.toBase58()}`);
-  console.error(`[AgentVault MCP] RPC: ${rpcUrl}`);
+  console.error(`[EscrowAgent MCP] Wallet: ${wallet.publicKey.toBase58()}`);
+  console.error(`[EscrowAgent MCP] RPC: ${rpcUrl}`);
 
   const { listen } = createMCPServer(vault);
   await listen();
 }
 
 main().catch((err) => {
-  console.error("[AgentVault MCP] Fatal:", err);
+  console.error("[EscrowAgent MCP] Fatal:", err);
   process.exit(1);
 });

@@ -28,13 +28,13 @@ const DIM = "\x1b[2m";
 const RESET = "\x1b[0m";
 
 async function main() {
-  console.log(`\n${BOLD}AgentVault Devnet Test${RESET}\n`);
+  console.log(`\n${BOLD}EscrowAgent Devnet Test${RESET}\n`);
 
   // Setup provider
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 
-  const program = anchor.workspace.Agentvault as any;
+  const program = anchor.workspace.Escrowagent as any;
   const connection = provider.connection;
 
   console.log(`${DIM}Program:  ${program.programId.toBase58()}${RESET}`);
@@ -49,19 +49,26 @@ async function main() {
   const walletKp = (provider.wallet as any).payer as Keypair;
   const client = walletKp;
   const providerAgent = Keypair.generate();
+  const arbitrator = Keypair.generate();
 
-  // Fund provider from client (transfer SOL, not airdrop)
-  const transferTx = new anchor.web3.Transaction().add(
+  // Fund provider and arbitrator from client (transfer SOL, not airdrop)
+  const fundTx = new anchor.web3.Transaction().add(
     anchor.web3.SystemProgram.transfer({
       fromPubkey: client.publicKey,
       toPubkey: providerAgent.publicKey,
       lamports: 0.1 * LAMPORTS_PER_SOL,
+    }),
+    anchor.web3.SystemProgram.transfer({
+      fromPubkey: client.publicKey,
+      toPubkey: arbitrator.publicKey,
+      lamports: 0.05 * LAMPORTS_PER_SOL,
     })
   );
-  await provider.sendAndConfirm(transferTx);
+  await provider.sendAndConfirm(fundTx);
 
-  console.log(`  Client:   ${client.publicKey.toBase58()}`);
-  console.log(`  Provider: ${providerAgent.publicKey.toBase58()}`);
+  console.log(`  Client:     ${client.publicKey.toBase58()}`);
+  console.log(`  Provider:   ${providerAgent.publicKey.toBase58()}`);
+  console.log(`  Arbitrator: ${arbitrator.publicKey.toBase58()}`);
 
   // ── Step 2: Create test token (mock USDC) ──
   console.log(`${CYAN}[2/6]${RESET} Creating test token...`);
@@ -157,7 +164,7 @@ async function main() {
     .accounts({
       client: client.publicKey,
       provider: providerAgent.publicKey,
-      arbitrator: provider.wallet.publicKey, // use our wallet as arbitrator for testing
+      arbitrator: arbitrator.publicKey, // separate neutral third party
       config: configPDA,
       escrow: escrowPDA,
       tokenMint: tokenMint,

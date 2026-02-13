@@ -1,7 +1,7 @@
 {
-  "name": "@agentvault/indexer",
+  "name": "@escrowagent/indexer",
   "version": "0.1.0",
-  "description": "AgentVault Indexer & REST API — indexes on-chain events, serves queries",
+  "description": "EscrowAgent Indexer & REST API — indexes on-chain events, serves queries",
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",

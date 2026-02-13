@@ -25,9 +25,9 @@ import {
 } from "./utils";
 
 /**
- * AgentVault SDK Client
+ * EscrowAgent SDK Client
  *
- * High-level interface for interacting with the AgentVault escrow protocol.
+ * High-level interface for interacting with the EscrowAgent escrow protocol.
  * Abstracts away Solana complexity — agents just call methods.
  *
  * @example

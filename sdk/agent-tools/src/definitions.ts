@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /**
- * Framework-agnostic tool definitions for AgentVault.
+ * Framework-agnostic tool definitions for EscrowAgent.
  *
  * Each tool has:
  * - name: unique identifier

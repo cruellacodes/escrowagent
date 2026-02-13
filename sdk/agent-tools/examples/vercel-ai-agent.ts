@@ -1,5 +1,5 @@
 /**
- * Example: Vercel AI SDK agent with AgentVault tools
+ * Example: Vercel AI SDK agent with EscrowAgent tools
  *
  * This agent can autonomously manage escrows using natural language.
  *
@@ -8,12 +8,12 @@
  *   npx tsx examples/vercel-ai-agent.ts
  */
 
-import { AgentVault, USDC_DEVNET_MINT } from "@agentvault/sdk";
+import { AgentVault, USDC_DEVNET_MINT } from "@escrowagent/sdk";
 import { createVercelAITools } from "../src/vercel-ai";
 import { Connection, Keypair } from "@solana/web3.js";
 
 async function main() {
-  // 1. Set up the AgentVault SDK
+  // 1. Set up the EscrowAgent SDK
   const connection = new Connection("https://api.devnet.solana.com");
   const wallet = Keypair.generate();
 

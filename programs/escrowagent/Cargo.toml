@@ -1,12 +1,12 @@
 [package]
-name = "agentvault"
+name = "escrowagent"
 version = "0.1.0"
-description = "AgentVault — Trust & settlement layer for agent-to-agent transactions on Solana"
+description = "EscrowAgent — Trust & settlement layer for agent-to-agent transactions on Solana"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "agentvault"
+name = "escrowagent"
 
 [features]
 no-entrypoint = []

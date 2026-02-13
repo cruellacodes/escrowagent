@@ -1,7 +1,7 @@
 // ──────────────────────────────────────────────────────
-// @agentvault/agent-tools
+// @escrowagent/agent-tools
 //
-// AI agent tool adapters for AgentVault escrow protocol.
+// AI agent tool adapters for EscrowAgent escrow protocol.
 // Works with LangChain, Vercel AI SDK, and MCP.
 // ──────────────────────────────────────────────────────
 

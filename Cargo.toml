@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "programs/agentvault"
+    "programs/escrowagent"
 ]
 resolver = "2"
 

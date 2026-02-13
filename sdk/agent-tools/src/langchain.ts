@@ -1,28 +1,28 @@
 /**
- * LangChain Tools adapter for AgentVault.
+ * LangChain Tools adapter for EscrowAgent.
  *
  * Usage:
- *   import { createLangChainTools } from "@agentvault/agent-tools";
+ *   import { createLangChainTools } from "@escrowagent/agent-tools";
  *   const tools = createLangChainTools(vault);
  *   const agent = createReactAgent({ llm, tools });
  */
 
 import { DynamicStructuredTool } from "@langchain/core/tools";
-import type { AgentVault } from "@agentvault/sdk";
+import type { AgentVault } from "@escrowagent/sdk";
 import { TOOL_DEFINITIONS } from "./definitions";
 import { ToolExecutor } from "./executor";
 
 /**
- * Create LangChain-compatible tools from an AgentVault SDK instance.
+ * Create LangChain-compatible tools from an EscrowAgent SDK instance.
  *
- * @param vault - Initialized AgentVault client
+ * @param vault - Initialized EscrowAgent client
  * @param toolNames - Optional list of tool names to include (default: all)
  * @returns Array of DynamicStructuredTool instances
  *
  * @example
  * ```ts
- * import { AgentVault } from "@agentvault/sdk";
- * import { createLangChainTools } from "@agentvault/agent-tools";
+ * import { AgentVault } from "@escrowagent/sdk";
+ * import { createLangChainTools } from "@escrowagent/agent-tools";
  * import { ChatOpenAI } from "@langchain/openai";
  * import { createReactAgent } from "@langchain/langgraph/prebuilt";
  *

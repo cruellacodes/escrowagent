@@ -1,7 +1,7 @@
 {
-  "name": "@agentvault/agent-tools",
+  "name": "@escrowagent/agent-tools",
   "version": "0.1.0",
-  "description": "AgentVault tools for AI agent frameworks — LangChain, Vercel AI SDK, and MCP",
+  "description": "EscrowAgent tools for AI agent frameworks — LangChain, Vercel AI SDK, and MCP",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -13,7 +13,7 @@
   "keywords": ["solana", "escrow", "agents", "langchain", "ai-sdk", "mcp", "tools"],
   "license": "MIT",
   "dependencies": {
-    "@agentvault/sdk": "file:../typescript",
+    "@escrowagent/sdk": "file:../typescript",
     "@coral-xyz/anchor": "^0.32.1",
     "@solana/web3.js": "^1.95.0",
     "@solana/spl-token": "^0.4.9",

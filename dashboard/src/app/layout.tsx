@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AgentVault — Escrow Dashboard",
+  title: "EscrowAgent — Escrow Dashboard",
   description:
     "Trust & settlement layer for autonomous agent-to-agent transactions on Solana",
 };
@@ -38,10 +38,10 @@ export default function RootLayout({
           <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3.5">
             <a href="/" className="flex items-center gap-3 group">
               <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--accent)] to-[#a78bfa] text-xs font-extrabold text-white shadow-lg shadow-[var(--accent)]/20 transition-transform group-hover:scale-105">
-                AV
+                EA
               </div>
               <span className="text-[15px] font-semibold tracking-[-0.01em]">
-                AgentVault
+                EscrowAgent
               </span>
               <span className="ml-1 rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-[10px] font-semibold text-[var(--accent)] uppercase tracking-wider">
                 Beta
@@ -82,7 +82,7 @@ export default function RootLayout({
         {/* Footer */}
         <footer className="mt-20 border-t border-[var(--border)] py-8">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-6 text-[13px] text-[var(--text-tertiary)]">
-            <span>AgentVault Protocol</span>
+            <span>EscrowAgent Protocol</span>
             <div className="flex gap-5">
               <a href="https://github.com" className="hover:text-[var(--text-secondary)] transition-colors">GitHub</a>
               <a href="/docs" className="hover:text-[var(--text-secondary)] transition-colors">Docs</a>

@@ -1,11 +1,11 @@
 /**
- * MCP (Model Context Protocol) server for AgentVault.
+ * MCP (Model Context Protocol) server for EscrowAgent.
  *
- * Exposes AgentVault operations as MCP tools that any MCP-compatible
+ * Exposes EscrowAgent operations as MCP tools that any MCP-compatible
  * client (Claude Desktop, Cursor, etc.) can use.
  *
  * Usage:
- *   import { createMCPServer } from "@agentvault/agent-tools";
+ *   import { createMCPServer } from "@escrowagent/agent-tools";
  *   const server = createMCPServer(vault);
  *   server.listen();  // stdio transport
  */
@@ -16,22 +16,22 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import type { AgentVault } from "@agentvault/sdk";
+import type { AgentVault } from "@escrowagent/sdk";
 import { TOOL_DEFINITIONS } from "./definitions";
 import { ToolExecutor } from "./executor";
 import { zodToJsonSchema } from "./utils";
 
 /**
- * Create an MCP server that exposes AgentVault tools.
+ * Create an MCP server that exposes EscrowAgent tools.
  *
- * @param vault - Initialized AgentVault client
+ * @param vault - Initialized EscrowAgent client
  * @returns MCP Server instance
  *
  * @example
  * ```ts
  * // mcp-server.ts — run as a separate process
- * import { AgentVault } from "@agentvault/sdk";
- * import { createMCPServer } from "@agentvault/agent-tools";
+ * import { AgentVault } from "@escrowagent/sdk";
+ * import { createMCPServer } from "@escrowagent/agent-tools";
  * import { Connection, Keypair } from "@solana/web3.js";
  *
  * const vault = new AgentVault({
@@ -47,7 +47,7 @@ import { zodToJsonSchema } from "./utils";
  * ```json
  * {
  *   "mcpServers": {
- *     "agentvault": {
+ *     "escrowagent": {
  *       "command": "npx",
  *       "args": ["tsx", "mcp-server.ts"]
  *     }
@@ -63,7 +63,7 @@ export function createMCPServer(vault: AgentVault): {
 
   const server = new Server(
     {
-      name: "agentvault",
+      name: "escrowagent",
       version: "0.1.0",
     },
     {
@@ -106,7 +106,7 @@ export function createMCPServer(vault: AgentVault): {
   async function listen() {
     const transport = new StdioServerTransport();
     await server.connect(transport);
-    console.error("[AgentVault MCP] Server running on stdio");
+    console.error("[EscrowAgent MCP] Server running on stdio");
   }
 
   return { server, listen };

@@ -223,19 +223,19 @@ export default async function HomePage() {
             <code>
               <span className="text-[var(--accent)]">{"import"}</span>
               <span className="text-[var(--text-secondary)]">{" { "}</span>
-              <span className="text-[var(--success)]">AgentVault</span>
+              <span className="text-[var(--success)]">EscrowAgent</span>
               <span className="text-[var(--text-secondary)]">{", "}</span>
               <span className="text-[var(--success)]">USDC_MINT</span>
               <span className="text-[var(--text-secondary)]">{" } "}</span>
               <span className="text-[var(--accent)]">from</span>
-              <span className="text-[var(--warning)]">{' "@agentvault/sdk"'}</span>
+              <span className="text-[var(--warning)]">{' "@escrowagent/sdk"'}</span>
               <span className="text-[var(--text-tertiary)]">;</span>
               {"\n\n"}
               <span className="text-[var(--accent)]">const</span>
               <span className="text-white">{" vault "}</span>
               <span className="text-[var(--accent)]">=</span>
               <span className="text-[var(--accent)]">{" new "}</span>
-              <span className="text-[var(--success)]">AgentVault</span>
+              <span className="text-[var(--success)]">EscrowAgent</span>
               <span className="text-[var(--text-secondary)]">{"({"}</span>
               {"\n"}
               <span className="text-[var(--text-secondary)]">{"  connection"}</span>

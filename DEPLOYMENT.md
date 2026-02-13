@@ -1,6 +1,6 @@
-# AgentVault Deployment Guide
+# EscrowAgent Deployment Guide
 
-This guide covers deploying the AgentVault escrow protocol to Solana networks (localnet, devnet, and mainnet).
+This guide covers deploying the EscrowAgent escrow protocol to Solana networks (localnet, devnet, and mainnet).
 
 ## Table of Contents
 
@@ -62,7 +62,7 @@ node --version        # Should be v18.x+
 anchor build
 ```
 
-This compiles the Rust program and generates the IDL in `target/idl/agentvault.json`.
+This compiles the Rust program and generates the IDL in `target/idl/escrowagent.json`.
 
 ### 2. Start Local Validator
 
@@ -134,14 +134,14 @@ You need at least **2 SOL** for deployment (program deployment costs ~1.5 SOL on
 anchor build
 ```
 
-This generates the program binary in `target/deploy/agentvault.so` and the keypair in `target/deploy/agentvault-keypair.json`.
+This generates the program binary in `target/deploy/escrowagent.so` and the keypair in `target/deploy/escrowagent-keypair.json`.
 
 ### Step 4: Extract Program ID
 
 The program ID is derived from the keypair. Extract it:
 
 ```bash
-solana address -k target/deploy/agentvault-keypair.json
+solana address -k target/deploy/escrowagent-keypair.json
 ```
 
 Save this address — you'll need to update it across the codebase.
@@ -150,7 +150,7 @@ Save this address — you'll need to update it across the codebase.
 
 The program ID must be consistent in **5 files**:
 
-#### 1. `programs/agentvault/src/lib.rs`
+#### 1. `programs/escrowagent/src/lib.rs`
 
 ```rust
 declare_id!("YOUR_PROGRAM_ID_HERE");
@@ -162,10 +162,10 @@ Update both `[programs.devnet]` and `[programs.localnet]` sections:
 
 ```toml
 [programs.devnet]
-agentvault = "YOUR_PROGRAM_ID_HERE"
+escrowagent = "YOUR_PROGRAM_ID_HERE"
 
 [programs.localnet]
-agentvault = "YOUR_PROGRAM_ID_HERE"
+escrowagent = "YOUR_PROGRAM_ID_HERE"
 ```
 
 #### 3. `sdk/typescript/src/utils.ts`
@@ -176,7 +176,7 @@ export const PROGRAM_ID = new PublicKey(
 );
 ```
 
-#### 4. `sdk/python/agentvault/client.py`
+#### 4. `sdk/python/escrowagent/client.py`
 
 ```python
 PROGRAM_ID = Pubkey.from_string("YOUR_PROGRAM_ID_HERE")
@@ -237,7 +237,7 @@ import { PublicKey } from "@solana/web3.js";
 const provider = anchor.AnchorProvider.env();
 anchor.setProvider(provider);
 
-const program = anchor.workspace.Agentvault;
+const program = anchor.workspace.Escrowagent;
 
 // Derive config PDA
 const [configPDA] = PublicKey.findProgramAddressSync(
@@ -299,8 +299,8 @@ cargo install solana-verify
 # Verify the program
 solana-verify verify \
   --program-id <YOUR_PROGRAM_ID> \
-  --source programs/agentvault/src \
-  --library-path target/deploy/agentvault.so
+  --source programs/escrowagent/src \
+  --library-path target/deploy/escrowagent.so
 ```
 
 #### 3. Set Upgrade Authority to Multisig
@@ -407,7 +407,7 @@ Only the admin can update protocol config. Use `update_protocol_config`:
 ```typescript
 import * as anchor from "@coral-xyz/anchor";
 
-const program = anchor.workspace.Agentvault;
+const program = anchor.workspace.Escrowagent;
 const [configPDA] = PublicKey.findProgramAddressSync(
   [Buffer.from("protocol_config")],
   program.programId
@@ -507,7 +507,7 @@ If you need to upgrade the program:
 anchor build
 
 # Deploy upgrade
-anchor upgrade target/deploy/agentvault.so \
+anchor upgrade target/deploy/escrowagent.so \
   --program-id <YOUR_PROGRAM_ID> \
   --provider.cluster mainnet-beta
 ```
@@ -526,11 +526,11 @@ SOLANA_RPC_URL=https://api.devnet.solana.com
 # For mainnet: https://api.mainnet-beta.solana.com
 # Or use a private RPC: https://your-rpc-provider.com
 
-# AgentVault program ID
+# EscrowAgent program ID
 PROGRAM_ID=YOUR_PROGRAM_ID_HERE
 
 # PostgreSQL connection
-DATABASE_URL=postgresql://user:password@localhost:5432/agentvault
+DATABASE_URL=postgresql://user:password@localhost:5432/escrowagent
 
 # API server
 PORT=3001

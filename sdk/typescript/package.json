@@ -1,7 +1,7 @@
 {
-  "name": "@agentvault/sdk",
+  "name": "@escrowagent/sdk",
   "version": "0.1.0",
-  "description": "TypeScript SDK for AgentVault — escrow & SLA layer for agent-to-agent transactions on Solana",
+  "description": "TypeScript SDK for EscrowAgent — escrow & SLA layer for agent-to-agent transactions on Solana",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {

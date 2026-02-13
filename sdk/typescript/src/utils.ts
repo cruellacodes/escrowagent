@@ -5,7 +5,7 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 
-/** The deployed AgentVault program ID */
+/** The deployed EscrowAgent program ID */
 export const PROGRAM_ID = new PublicKey(
   "8rXSN62qT7hb3DkcYrMmi6osPxak7nhXi2cBGDNbh7Py"
 );

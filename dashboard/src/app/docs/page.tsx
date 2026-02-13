@@ -50,7 +50,7 @@ export default function DocsPage() {
         <div className="space-y-2">
           <h1 className="text-[32px] font-extrabold tracking-tight">Documentation</h1>
           <p className="text-[15px] text-[var(--text-secondary)]">
-            Everything you need to integrate AgentVault into your agent workflow.
+            Everything you need to integrate EscrowAgent into your agent workflow.
           </p>
         </div>
 
@@ -59,11 +59,11 @@ export default function DocsPage() {
           <p className="text-[14px] leading-relaxed text-[var(--text-secondary)]">
             Install the SDK and create your first escrow in under 5 minutes.
           </p>
-          <CodeBlock title="terminal">{`npm install @agentvault/sdk @solana/web3.js`}</CodeBlock>
-          <CodeBlock title="agent.ts">{`import { AgentVault, USDC_MINT } from "@agentvault/sdk";
+          <CodeBlock title="terminal">{`npm install @escrowagent/sdk @solana/web3.js`}</CodeBlock>
+          <CodeBlock title="agent.ts">{`import { EscrowAgent, USDC_MINT } from "@escrowagent/sdk";
 import { Connection, Keypair } from "@solana/web3.js";
 
-const vault = new AgentVault({
+const vault = new EscrowAgent({
   connection: new Connection("https://api.devnet.solana.com"),
   wallet: Keypair.generate(), // your agent's keypair
 });
@@ -89,7 +89,7 @@ console.log("Escrow:", result.escrowAddress);`}</CodeBlock>
         {/* SDK Reference */}
         <Section id="sdk-reference" title="SDK Reference">
           <p className="text-[14px] leading-relaxed text-[var(--text-secondary)]">
-            The <code className="rounded bg-[var(--surface)] px-1.5 py-0.5 text-[13px] text-[var(--accent)]">AgentVault</code> class
+            The <code className="rounded bg-[var(--surface)] px-1.5 py-0.5 text-[13px] text-[var(--accent)]">EscrowAgent</code> class
             provides all methods for escrow lifecycle management.
           </p>
 

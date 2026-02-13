@@ -1,4 +1,4 @@
-"""AgentVault Python SDK Client — high-level interface for the escrow protocol."""
+"""EscrowAgent Python SDK Client — high-level interface for the escrow protocol."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from solders.pubkey import Pubkey
 from solders.system_program import ID as SYS_PROGRAM_ID
 from solders.sysvar import RENT
 
-from agentvault.types import (
+from escrowagent.types import (
     AgentStats,
     CreateEscrowParams,
     DisputeRuling,
@@ -97,9 +97,9 @@ def _get_associated_token_address(
 
 
 def _load_idl(idl_path: Optional[str] = None) -> Idl:
-    """Load IDL from file. Defaults to target/idl/agentvault.json relative to cwd."""
+    """Load IDL from file. Defaults to target/idl/escrowagent.json relative to cwd."""
     if idl_path is None:
-        idl_path = Path.cwd() / "target" / "idl" / "agentvault.json"
+        idl_path = Path.cwd() / "target" / "idl" / "escrowagent.json"
     else:
         idl_path = Path(idl_path)
     if not idl_path.exists():
@@ -142,13 +142,13 @@ def _dispute_ruling_to_idl(ruling: DisputeRuling) -> dict:
 
 class AgentVault:
     """
-    High-level Python client for the AgentVault escrow protocol.
+    High-level Python client for the EscrowAgent escrow protocol.
 
     Usage:
         vault = AgentVault(
             rpc_url="https://api.devnet.solana.com",
             keypair=my_keypair,
-            indexer_url="https://api.agentvault.xyz",
+            indexer_url="https://api.escrowagent.xyz",
         )
 
         result = await vault.create_escrow(
@@ -173,7 +173,7 @@ class AgentVault:
         protocol_fee_account: Optional[Pubkey] = None,
     ):
         """
-        Initialize the AgentVault client.
+        Initialize the EscrowAgent client.
 
         Args:
             rpc_url: Solana RPC endpoint (e.g. https://api.devnet.solana.com)

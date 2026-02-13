@@ -1,5 +1,5 @@
 /**
- * Example: LangChain agent with AgentVault tools
+ * Example: LangChain agent with EscrowAgent tools
  *
  * This agent can autonomously:
  * - Check other agents' reputations
@@ -13,12 +13,12 @@
  *   npx tsx examples/langchain-agent.ts
  */
 
-import { AgentVault, USDC_DEVNET_MINT } from "@agentvault/sdk";
+import { AgentVault, USDC_DEVNET_MINT } from "@escrowagent/sdk";
 import { createLangChainTools } from "../src/langchain";
 import { Connection, Keypair } from "@solana/web3.js";
 
 async function main() {
-  // 1. Set up the AgentVault SDK
+  // 1. Set up the EscrowAgent SDK
   const connection = new Connection("https://api.devnet.solana.com");
   const wallet = Keypair.generate(); // In production, load from env
 

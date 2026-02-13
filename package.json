@@ -1,7 +1,7 @@
 {
-  "name": "agentvault",
+  "name": "escrowagent",
   "version": "0.1.0",
-  "description": "AgentVault — Trust & settlement layer for agent-to-agent transactions on Solana",
+  "description": "EscrowAgent — Trust & settlement layer for agent-to-agent transactions on Solana",
   "scripts": {
     "test": "anchor test",
     "test:local": "anchor test --skip-local-validator",

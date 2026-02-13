@@ -1,11 +1,11 @@
-# AgentVault
+# EscrowAgent
 
 **Trustless escrow for autonomous agent-to-agent transactions on Solana.**
 
 Agents escrow funds, define success criteria, and auto-settle based on verifiable outcomes — no trust required.
 
 ```bash
-$ npx agentvault status
+$ npx escrowagent status
 
   ● Program:    8rXSN62qT7hb3DkcYrMmi6osPxak7nhXi2cBGDNbh7Py
   ● Status:     DEPLOYED
@@ -41,29 +41,29 @@ No human in the loop. Funds cannot move until program conditions are met.
 ## Quick Start
 
 ```bash
-# Add AgentVault to your agent project
-$ npx agentvault init
+# Add EscrowAgent to your agent project
+$ npx escrowagent init
 
 # Check protocol status
-$ npx agentvault status
+$ npx escrowagent status
 
 # Start MCP server for Claude Desktop
-$ npx agentvault mcp
+$ npx escrowagent mcp
 ```
 
 ### Install the SDK
 
 ```bash
-npm install @agentvault/sdk
+npm install @escrowagent/sdk
 ```
 
 ### Create Your First Escrow
 
 ```typescript
-import { AgentVault, USDC_DEVNET_MINT } from "@agentvault/sdk";
+import { EscrowAgent, USDC_DEVNET_MINT } from "@escrowagent/sdk";
 import { Connection, Keypair } from "@solana/web3.js";
 
-const vault = new AgentVault({
+const vault = new EscrowAgent({
   connection: new Connection("https://api.devnet.solana.com"),
   wallet: agentKeypair,
 });
@@ -92,9 +92,9 @@ await vault.submitProof(escrow.escrowAddress, {
 ### Python
 
 ```python
-from agentvault import AgentVault
+from escrowagent import EscrowAgent
 
-vault = AgentVault(
+vault = EscrowAgent(
     rpc_url="https://api.devnet.solana.com",
     keypair=agent_keypair,
 )
@@ -112,16 +112,16 @@ escrow = await vault.create_escrow(
 
 ## AI Agent Tools
 
-AgentVault isn't just an SDK — it's a set of **tools that AI agents can autonomously decide to use.**
+EscrowAgent isn't just an SDK — it's a set of **tools that AI agents can autonomously decide to use.**
 
 ### LangChain
 
 ```bash
-npm install @agentvault/agent-tools @langchain/core
+npm install @escrowagent/agent-tools @langchain/core
 ```
 
 ```typescript
-import { createLangChainTools } from "@agentvault/agent-tools";
+import { createLangChainTools } from "@escrowagent/agent-tools";
 
 const tools = createLangChainTools(vault);
 const agent = createReactAgent({ llm, tools });
@@ -131,7 +131,7 @@ const agent = createReactAgent({ llm, tools });
 ### Vercel AI SDK
 
 ```typescript
-import { createVercelAITools } from "@agentvault/agent-tools";
+import { createVercelAITools } from "@escrowagent/agent-tools";
 
 const tools = createVercelAITools(vault);
 const { text } = await generateText({ model, tools, prompt });
@@ -140,7 +140,7 @@ const { text } = await generateText({ model, tools, prompt });
 ### Claude / MCP
 
 ```bash
-$ npx agentvault mcp
+$ npx escrowagent mcp
 ```
 
 Add to your Claude Desktop config:
@@ -148,9 +148,9 @@ Add to your Claude Desktop config:
 ```json
 {
   "mcpServers": {
-    "agentvault": {
+    "escrowagent": {
       "command": "npx",
-      "args": ["agentvault", "mcp"],
+      "args": ["escrowagent", "mcp"],
       "env": {
         "SOLANA_RPC_URL": "https://api.devnet.solana.com",
         "AGENT_PRIVATE_KEY": "[your,keypair,bytes]"
@@ -194,7 +194,7 @@ Add to your Claude Desktop config:
        ────────────────┼──────────────
                        │
            ┌───────────▼───────────┐
-           │   AgentVault Program  │
+           │   EscrowAgent Program  │
            │                       │
            │   • Escrow Manager    │
            │   • Verification      │
@@ -214,11 +214,11 @@ Add to your Claude Desktop config:
 
 | Component | Path | Description |
 |-----------|------|-------------|
-| Solana Program | `programs/agentvault/` | Anchor smart contract — 10 instructions, full escrow lifecycle |
-| TypeScript SDK | `sdk/typescript/` | `@agentvault/sdk` — agent-facing client library |
-| Python SDK | `sdk/python/` | `agentvault-sdk` — Python client with anchorpy |
+| Solana Program | `programs/escrowagent/` | Anchor smart contract — 10 instructions, full escrow lifecycle |
+| TypeScript SDK | `sdk/typescript/` | `@escrowagent/sdk` — agent-facing client library |
+| Python SDK | `sdk/python/` | `escrowagent-sdk` — Python client with anchorpy |
 | Agent Tools | `sdk/agent-tools/` | LangChain, Vercel AI SDK, and MCP adapters |
-| CLI | `sdk/cli/` | `npx agentvault` — init, mcp, status |
+| CLI | `sdk/cli/` | `npx escrowagent` — init, mcp, status |
 | Indexer + API | `indexer/` | Event listener + Fastify REST API + PostgreSQL |
 | Dashboard | `dashboard/` | Next.js 15 + Tailwind CSS 4 monitoring UI |
 | Tests | `tests/` | 9 passing integration tests |
@@ -308,8 +308,8 @@ cd dashboard && npm install && npm run dev
 |---|---|
 | **Program ID** | `8rXSN62qT7hb3DkcYrMmi6osPxak7nhXi2cBGDNbh7Py` |
 | **Network** | Solana Devnet |
-| **npm** | [`agentvault`](https://www.npmjs.com/package/agentvault) |
-| **GitHub** | [`cruellacodes/agentvault`](https://github.com/cruellacodes/agentvault) |
+| **npm** | [`escrowagent`](https://www.npmjs.com/package/escrowagent) |
+| **GitHub** | [`cruellacodes/escrowagent`](https://github.com/cruellacodes/escrowagent) |
 
 ---
 

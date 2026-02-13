@@ -11,7 +11,7 @@ use state::enums::*;
 declare_id!("8rXSN62qT7hb3DkcYrMmi6osPxak7nhXi2cBGDNbh7Py");
 
 #[program]
-pub mod agentvault {
+pub mod escrowagent {
     use super::*;
 
     // ──────────────────────────────────────────────────────

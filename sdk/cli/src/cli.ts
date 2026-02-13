@@ -11,7 +11,7 @@ const WHITE = "\x1b[37m";
 
 const LOGO = `
 ${MAGENTA}${BOLD}    ╔═══════════════════════════════════════╗
-    ║         ${WHITE}A G E N T V A U L T${MAGENTA}           ║
+    ║         ${WHITE}E S C R O W A G E N T${MAGENTA}           ║
     ║   ${DIM}${WHITE}Trustless Escrow for AI Agents${MAGENTA}${BOLD}      ║
     ╚═══════════════════════════════════════╝${RESET}
 `;
@@ -21,28 +21,28 @@ const command = args[0];
 
 function printHelp() {
   console.log(LOGO);
-  console.log(`${BOLD}Usage:${RESET}  npx agentvault ${CYAN}<command>${RESET}\n`);
+  console.log(`${BOLD}Usage:${RESET}  npx escrowagent ${CYAN}<command>${RESET}\n`);
   console.log(`${BOLD}Commands:${RESET}`);
-  console.log(`  ${CYAN}init${RESET}          Scaffold AgentVault into your agent project`);
+  console.log(`  ${CYAN}init${RESET}          Scaffold EscrowAgent into your agent project`);
   console.log(`  ${CYAN}mcp${RESET}           Start the MCP server (for Claude, Cursor, etc.)`);
   console.log(`  ${CYAN}status${RESET}        Check protocol status on devnet/mainnet`);
   console.log(`  ${CYAN}info${RESET}          Show program ID and config`);
   console.log(`  ${CYAN}help${RESET}          Show this help message`);
   console.log();
   console.log(`${BOLD}Examples:${RESET}`);
-  console.log(`  ${DIM}# Add AgentVault escrow skills to your agent${RESET}`);
-  console.log(`  ${GREEN}$ npx agentvault init${RESET}`);
+  console.log(`  ${DIM}# Add EscrowAgent escrow skills to your agent${RESET}`);
+  console.log(`  ${GREEN}$ npx escrowagent init${RESET}`);
   console.log();
   console.log(`  ${DIM}# Start MCP server for Claude Desktop${RESET}`);
-  console.log(`  ${GREEN}$ npx agentvault mcp${RESET}`);
+  console.log(`  ${GREEN}$ npx escrowagent mcp${RESET}`);
   console.log();
-  console.log(`${DIM}Docs: https://github.com/cruellacodes/agentvault${RESET}`);
+  console.log(`${DIM}Docs: https://github.com/cruellacodes/escrow-agent${RESET}`);
   console.log();
 }
 
 async function init() {
   console.log(LOGO);
-  console.log(`${BOLD}Initializing AgentVault in your project...${RESET}\n`);
+  console.log(`${BOLD}Initializing EscrowAgent in your project...${RESET}\n`);
 
   const fs = await import("fs");
   const path = await import("path");
@@ -56,25 +56,25 @@ async function init() {
   }
 
   // Install SDK dependencies
-  console.log(`${CYAN}Installing @agentvault/sdk...${RESET}`);
+  console.log(`${CYAN}Installing @escrowagent/sdk...${RESET}`);
   const { execSync } = await import("child_process");
 
   try {
-    execSync("npm install @agentvault/sdk @solana/web3.js @solana/spl-token", {
+    execSync("npm install @escrowagent/sdk @solana/web3.js @solana/spl-token", {
       cwd,
       stdio: "inherit",
     });
   } catch {
     console.log(`${YELLOW}npm install failed. You can install manually:${RESET}`);
-    console.log(`  npm install @agentvault/sdk @solana/web3.js @solana/spl-token`);
+    console.log(`  npm install @escrowagent/sdk @solana/web3.js @solana/spl-token`);
   }
 
   // Create example agent file
-  const examplePath = path.join(cwd, "agentvault.config.ts");
+  const examplePath = path.join(cwd, "escrowagent.config.ts");
   if (!fs.existsSync(examplePath)) {
     fs.writeFileSync(
       examplePath,
-      `import { AgentVault, USDC_DEVNET_MINT } from "@agentvault/sdk";
+      `import { AgentVault, USDC_DEVNET_MINT } from "@escrowagent/sdk";
 import { Connection, Keypair } from "@solana/web3.js";
 
 // ── Configure your agent's vault connection ──
@@ -91,8 +91,8 @@ const wallet = process.env.AGENT_PRIVATE_KEY
 export const vault = new AgentVault({
   connection,
   wallet,
-  indexerUrl: process.env.AGENTVAULT_INDEXER_URL || "http://localhost:3001",
-  programId: "AGENTVAULT_PROGRAM_ID",
+  indexerUrl: process.env.ESCROWAGENT_INDEXER_URL || "http://localhost:3001",
+  programId: "ESCROWAGENT_PROGRAM_ID",
 });
 
 // ── Example: Create an escrow ──
@@ -114,57 +114,57 @@ async function example() {
 
   console.log("Escrow created:", result.escrowAddress);
 }
-`.replace("AGENTVAULT_PROGRAM_ID", "8rXSN62qT7hb3DkcYrMmi6osPxak7nhXi2cBGDNbh7Py")
+`.replace("ESCROWAGENT_PROGRAM_ID", "8rXSN62qT7hb3DkcYrMmi6osPxak7nhXi2cBGDNbh7Py")
     );
-    console.log(`\n${GREEN}Created${RESET} agentvault.config.ts`);
+    console.log(`\n${GREEN}Created${RESET} escrowagent.config.ts`);
   }
 
   // Create .env.example
-  const envPath = path.join(cwd, ".env.agentvault");
+  const envPath = path.join(cwd, ".env.escrowagent");
   if (!fs.existsSync(envPath)) {
     fs.writeFileSync(
       envPath,
-      `# AgentVault Configuration
+      `# EscrowAgent Configuration
 SOLANA_RPC_URL=https://api.devnet.solana.com
 AGENT_PRIVATE_KEY=  # Your agent's keypair as JSON array
-AGENTVAULT_INDEXER_URL=http://localhost:3001
+ESCROWAGENT_INDEXER_URL=http://localhost:3001
 `
     );
-    console.log(`${GREEN}Created${RESET} .env.agentvault`);
+    console.log(`${GREEN}Created${RESET} .env.escrowagent`);
   }
 
   console.log(`
-${GREEN}${BOLD}AgentVault initialized!${RESET}
+${GREEN}${BOLD}EscrowAgent initialized!${RESET}
 
 ${BOLD}Next steps:${RESET}
 
-  ${CYAN}1.${RESET} Edit ${WHITE}agentvault.config.ts${RESET} with your agent's config
-  ${CYAN}2.${RESET} Set your agent's private key in ${WHITE}.env.agentvault${RESET}
+  ${CYAN}1.${RESET} Edit ${WHITE}escrowagent.config.ts${RESET} with your agent's config
+  ${CYAN}2.${RESET} Set your agent's private key in ${WHITE}.env.escrowagent${RESET}
   ${CYAN}3.${RESET} Import the vault in your agent:
 
-     ${DIM}import { vault } from "./agentvault.config";
+     ${DIM}import { vault } from "./escrowagent.config";
      const escrow = await vault.createEscrow({ ... });${RESET}
 
 ${BOLD}For AI agent frameworks:${RESET}
 
   ${DIM}# LangChain${RESET}
-  npm install @agentvault/agent-tools @langchain/core
-  ${DIM}import { createLangChainTools } from "@agentvault/agent-tools";${RESET}
+  npm install @escrowagent/agent-tools @langchain/core
+  ${DIM}import { createLangChainTools } from "@escrowagent/agent-tools";${RESET}
 
   ${DIM}# Vercel AI SDK${RESET}
-  npm install @agentvault/agent-tools ai
-  ${DIM}import { createVercelAITools } from "@agentvault/agent-tools";${RESET}
+  npm install @escrowagent/agent-tools ai
+  ${DIM}import { createVercelAITools } from "@escrowagent/agent-tools";${RESET}
 
   ${DIM}# Claude MCP Server${RESET}
-  npx agentvault mcp
+  npx escrowagent mcp
 
-${DIM}Docs: https://github.com/cruellacodes/agentvault${RESET}
+${DIM}Docs: https://github.com/cruellacodes/escrow-agent${RESET}
 `);
 }
 
 async function mcp() {
   console.log(LOGO);
-  console.log(`${BOLD}Starting AgentVault MCP Server...${RESET}\n`);
+  console.log(`${BOLD}Starting EscrowAgent MCP Server...${RESET}\n`);
 
   const { Connection, Keypair } = await import("@solana/web3.js");
 
@@ -190,9 +190,9 @@ async function mcp() {
   console.error(`
 {
   "mcpServers": {
-    "agentvault": {
+    "escrowagent": {
       "command": "npx",
-      "args": ["agentvault", "mcp"],
+      "args": ["escrowagent", "mcp"],
       "env": {
         "SOLANA_RPC_URL": "https://api.devnet.solana.com",
         "AGENT_PRIVATE_KEY": "[your,keypair,bytes]"
@@ -202,18 +202,18 @@ async function mcp() {
 }
 `);
 
-  // The actual MCP server implementation would be imported from @agentvault/agent-tools
+  // The actual MCP server implementation would be imported from @escrowagent/agent-tools
   // For now, we provide the setup instructions
-  // In production: import { createMCPServer } from "@agentvault/agent-tools";
+  // In production: import { createMCPServer } from "@escrowagent/agent-tools";
   // const { listen } = createMCPServer(vault);
   // await listen();
 
-  console.error(`${YELLOW}Note: Install @agentvault/agent-tools for full MCP server: npm install @agentvault/agent-tools${RESET}`);
+  console.error(`${YELLOW}Note: Install @escrowagent/agent-tools for full MCP server: npm install @escrowagent/agent-tools${RESET}`);
 }
 
 async function status() {
   console.log(LOGO);
-  console.log(`${BOLD}Checking AgentVault protocol status...${RESET}\n`);
+  console.log(`${BOLD}Checking EscrowAgent protocol status...${RESET}\n`);
 
   const { Connection, PublicKey } = await import("@solana/web3.js");
 
@@ -258,14 +258,14 @@ async function status() {
 
 function info() {
   console.log(LOGO);
-  console.log(`${BOLD}AgentVault Protocol Info${RESET}\n`);
+  console.log(`${BOLD}EscrowAgent Protocol Info${RESET}\n`);
   console.log(`  Program ID:    ${WHITE}8rXSN62qT7hb3DkcYrMmi6osPxak7nhXi2cBGDNbh7Py${RESET}`);
   console.log(`  Network:       Solana Devnet`);
   console.log(`  Protocol Fee:  0.5%`);
   console.log(`  Arbitrator Fee: 1.0%`);
-  console.log(`  GitHub:        ${CYAN}https://github.com/cruellacodes/agentvault${RESET}`);
-  console.log(`  SDK:           npm install @agentvault/sdk`);
-  console.log(`  Agent Tools:   npm install @agentvault/agent-tools`);
+  console.log(`  GitHub:        ${CYAN}https://github.com/cruellacodes/escrow-agent${RESET}`);
+  console.log(`  SDK:           npm install @escrowagent/sdk`);
+  console.log(`  Agent Tools:   npm install @escrowagent/agent-tools`);
   console.log();
 }
 

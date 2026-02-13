@@ -1,4 +1,4 @@
-import { AgentVault, USDC_MINT } from "@agentvault/sdk";
+import { AgentVault, USDC_MINT } from "@escrowagent/sdk";
 import type { z } from "zod";
 import type {
   CreateEscrowSchema,
@@ -13,7 +13,7 @@ import type {
 } from "./definitions";
 
 /**
- * Tool executor — maps tool calls to AgentVault SDK methods.
+ * Tool executor — maps tool calls to EscrowAgent SDK methods.
  *
  * This is the bridge between AI tool calls and the actual Solana transactions.
  * Framework adapters (LangChain, Vercel AI, MCP) all route through here.

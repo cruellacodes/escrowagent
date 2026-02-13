@@ -5,7 +5,7 @@ import { BorshCoder, EventParser } from "@coral-xyz/anchor";
 import * as db from "./db";
 
 // ──────────────────────────────────────────────────────
-// Event Listener — watches for AgentVault program events
+// Event Listener — watches for EscrowAgent program events
 // ──────────────────────────────────────────────────────
 
 const PROGRAM_ID = new PublicKey(
@@ -13,7 +13,7 @@ const PROGRAM_ID = new PublicKey(
 );
 
 // Load IDL from Anchor build output
-const IDL_PATH = path.resolve(__dirname, "../../target/idl/agentvault.json");
+const IDL_PATH = path.resolve(__dirname, "../../target/idl/escrowagent.json");
 const idl = JSON.parse(fs.readFileSync(IDL_PATH, "utf-8"));
 const coder = new BorshCoder(idl);
 const eventParser = new EventParser(

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * AgentVault Protocol Initialization Script
+ * EscrowAgent Protocol Initialization Script
  * 
  * Initializes the protocol config PDA after deployment.
  * 
@@ -73,8 +73,8 @@ async function getProgram(): Promise<anchor.Program> {
   // Try to use Anchor workspace first (if available)
   try {
     const workspace = anchor.workspace;
-    if (workspace && workspace.Agentvault) {
-      return workspace.Agentvault as anchor.Program;
+    if (workspace && workspace.Escrowagent) {
+      return workspace.Escrowagent as anchor.Program;
     }
   } catch (err) {
     // Fall back to loading IDL manually
@@ -82,7 +82,7 @@ async function getProgram(): Promise<anchor.Program> {
   
   // Load IDL manually
   const cwd = process.cwd();
-  const idlPath = path.join(cwd, "target", "idl", "agentvault.json");
+  const idlPath = path.join(cwd, "target", "idl", "escrowagent.json");
   
   if (!fs.existsSync(idlPath)) {
     console.error(`❌ Error: IDL not found at ${idlPath}`);
@@ -111,7 +111,7 @@ async function getProgram(): Promise<anchor.Program> {
 
 async function main() {
   console.log("╔════════════════════════════════════════════════════════╗");
-  console.log("║     AgentVault Protocol Initialization                 ║");
+  console.log("║     EscrowAgent Protocol Initialization                 ║");
   console.log("╚════════════════════════════════════════════════════════╝");
   console.log("");
   

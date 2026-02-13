@@ -6,7 +6,7 @@ But here's what nobody shows: what happens when Agent A needs Agent B to do some
 
 Right now, the answer is nothing. Because there's no trust layer. There's no way for one autonomous agent to pay another for work without a human babysitting the transaction. Every agent-to-agent interaction requires either blind trust or manual oversight.
 
-We just built the fix. It's called AgentVault, and it's live on Solana.
+We just built the fix. It's called EscrowAgent, and it's live on Solana.
 
 ---
 
@@ -25,7 +25,7 @@ None of these scale. If we want a real agent economy — thousands of specialize
 
 ## WHAT WE BUILT
 
-AgentVault is an escrow and SLA layer for agent-to-agent transactions. The core idea is dead simple:
+EscrowAgent is an escrow and SLA layer for agent-to-agent transactions. The core idea is dead simple:
 
 **Agent A locks funds in a vault. Agent B does the work. Proof is verified. Funds release automatically.**
 
@@ -53,7 +53,7 @@ All funds sit in program-derived accounts (PDAs). No admin key can touch them. N
 
 ### Verification Types
 
-Not every task can be verified the same way. AgentVault supports four modes:
+Not every task can be verified the same way. EscrowAgent supports four modes:
 
 **On-Chain** — Agent B submits a transaction signature as proof. The program verifies it exists and matches the criteria. Funds auto-release. No human touch. This is for tasks like token swaps, transfers, or any on-chain operation where the result is a transaction.
 
@@ -98,7 +98,7 @@ The admin can be transferred to a multisig. Eventually, this becomes governance.
 
 Here's where it gets interesting for the AI crowd.
 
-AgentVault isn't just an SDK you call from code. It's a set of **tools that AI agents can autonomously decide to use.**
+EscrowAgent isn't just an SDK you call from code. It's a set of **tools that AI agents can autonomously decide to use.**
 
 We built adapters for every major agent framework:
 
@@ -106,7 +106,7 @@ We built adapters for every major agent framework:
 ```json
 {
   "mcpServers": {
-    "agentvault": {
+    "escrowagent": {
       "command": "npx",
       "args": ["tsx", "mcp-server.ts"]
     }
@@ -153,7 +153,7 @@ Three reasons:
 
 ## WHAT'S NEXT
 
-AgentVault is live on devnet today. The code is open source.
+EscrowAgent is live on devnet today. The code is open source.
 
 **Phase 1 (now):** Core escrow with on-chain and multi-sig verification. TypeScript + Python SDKs. Agent tools for Claude, LangChain, and Vercel AI.
 
@@ -169,7 +169,7 @@ We're building infrastructure for an economy that doesn't exist yet.
 
 Right now, agents are isolated. Each one is a silo — powerful within its domain, helpless outside it. The moment an agent needs something from another agent, the whole thing breaks down.
 
-AgentVault is a bet that the future isn't individual agents getting smarter. It's agents getting better at working together. Specialization, delegation, and trustless settlement.
+EscrowAgent is a bet that the future isn't individual agents getting smarter. It's agents getting better at working together. Specialization, delegation, and trustless settlement.
 
 The same way HTTP enabled a web of documents and TCP/IP enabled a network of computers, we need a protocol that enables a network of agents. Not just communication — commerce. Agents hiring agents. Agents paying agents. Agents building reputations and earning trust.
 
@@ -177,7 +177,7 @@ That's what this is.
 
 ---
 
-**AgentVault is open source and live on Solana devnet.**
+**EscrowAgent is open source and live on Solana devnet.**
 
-GitHub: github.com/cruellacodes/agentvault
+GitHub: github.com/cruellacodes/escrowagent
 Program ID: `8rXSN62qT7hb3DkcYrMmi6osPxak7nhXi2cBGDNbh7Py`

@@ -1,9 +1,9 @@
 {
-  "name": "agentvault",
+  "name": "escrowagent",
   "version": "0.1.0",
-  "description": "AgentVault CLI — trustless escrow for autonomous AI agents on Solana",
+  "description": "EscrowAgent CLI — trustless escrow for autonomous AI agents on Solana",
   "bin": {
-    "agentvault": "./dist/cli.js"
+    "escrowagent": "./dist/cli.js"
   },
   "scripts": {
     "build": "tsc",

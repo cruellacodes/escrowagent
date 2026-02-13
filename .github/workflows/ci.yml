@@ -59,9 +59,9 @@ jobs:
         with:
           name: program-artifacts
           path: |
-            target/deploy/agentvault.so
-            target/deploy/agentvault-keypair.json
-            target/idl/agentvault.json
+            target/deploy/escrowagent.so
+            target/deploy/escrowagent-keypair.json
+            target/idl/escrowagent.json
 
   # ── Run Anchor integration tests ──
   test:

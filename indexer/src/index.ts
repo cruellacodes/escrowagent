@@ -4,7 +4,7 @@ import { EventListener } from "./listener";
 import { migrate } from "./db";
 
 // ──────────────────────────────────────────────────────
-// AgentVault Indexer — Entry Point
+// EscrowAgent Indexer — Entry Point
 //
 // Starts the event listener and REST API server.
 // ──────────────────────────────────────────────────────
