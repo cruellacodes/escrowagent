@@ -12,8 +12,8 @@ const PROGRAM_ID = new PublicKey(
   process.env.PROGRAM_ID || "8rXSN62qT7hb3DkcYrMmi6osPxak7nhXi2cBGDNbh7Py"
 );
 
-// Load IDL from Anchor build output
-const IDL_PATH = path.resolve(__dirname, "../../target/idl/escrowagent.json");
+// Load IDL from bundled file (copied from Anchor build output)
+const IDL_PATH = path.resolve(__dirname, "../escrowagent-idl.json");
 const idl = JSON.parse(fs.readFileSync(IDL_PATH, "utf-8"));
 const coder = new BorshCoder(idl);
 const eventParser = new EventParser(
