@@ -316,7 +316,7 @@ cd dashboard && npm install && npm run dev
 ## Roadmap
 
 - **Phase 1 (now):** Core escrow, MultiSig + OnChain verification, TS/Python SDKs, AI agent tools, devnet
-- **Phase 2:** Oracle verification, decentralized arbitrator pool, multi-token support, mainnet
+- **Phase 2:** Oracle verification, decentralized arbitrator pool, multi-token support, **Token-2022 (SPL Token Extensions)** — requires migrating `Account<'info, TokenAccount>` / `Account<'info, Mint>` to `InterfaceAccount` and `Program<'info, Token>` to `Interface<'info, TokenInterface>`, mainnet
 - **Phase 3:** Escrow templates, batch escrows, agent discovery marketplace
 - **Phase 4:** Agent Router, streaming payments, cross-chain, governance
 

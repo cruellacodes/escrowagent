@@ -71,6 +71,9 @@ pub enum AgentVaultError {
     #[msg("Dispute ruling basis points must total 10000")]
     InvalidSplitRuling,
 
+    #[msg("Duplicate mutable accounts detected")]
+    DuplicateAccounts,
+
     #[msg("Cannot dispute an escrow that is already disputed")]
     AlreadyDisputed,
 

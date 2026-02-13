@@ -22,8 +22,10 @@ pub struct CancelEscrow<'info> {
     pub config: Account<'info, ProtocolConfig>,
 
     /// The escrow account
+    /// M-1: Close escrow after cancellation, rent recovered to client
     #[account(
         mut,
+        close = client,
         constraint = escrow.client == client.key() @ AgentVaultError::UnauthorizedClient,
         constraint = escrow.status == EscrowStatus::AwaitingProvider @ AgentVaultError::InvalidStatus,
     )]

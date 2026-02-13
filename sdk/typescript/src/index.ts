@@ -22,6 +22,7 @@ export {
   PROGRAM_ID,
   USDC_MINT,
   USDC_DEVNET_MINT,
+  createComputeBudgetInstructions,
   deriveEscrowPDA,
   deriveVaultPDA,
   deriveVaultAuthorityPDA,

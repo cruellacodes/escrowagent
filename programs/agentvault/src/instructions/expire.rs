@@ -26,8 +26,10 @@ pub struct ExpireEscrow<'info> {
     ///      ProofSubmitted is EXCLUDED — once proof is submitted, the
     ///      provider is protected. Funds can only be released via
     ///      confirm_completion, provider_release, or dispute resolution.
+    /// M-1: Close escrow after expiry, rent recovered to client
     #[account(
         mut,
+        close = client,
         constraint = matches!(escrow.status, EscrowStatus::Active | EscrowStatus::AwaitingProvider)
             @ AgentVaultError::InvalidStatus,
     )]

@@ -147,6 +147,10 @@ export interface AgentVaultConfig {
   programId?: string | PublicKey;
   /** Protocol fee account (required for creating escrows) */
   protocolFeeAccount?: string | PublicKey;
+  /** Compute units per transaction (default 200000) */
+  computeUnits?: number;
+  /** Priority fee in micro-lamports per compute unit (default 1000) */
+  priorityFee?: number;
 }
 
 export interface TransactionResult {

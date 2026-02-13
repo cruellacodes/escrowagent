@@ -1,5 +1,9 @@
 import { createHash } from "crypto";
-import { PublicKey } from "@solana/web3.js";
+import {
+  ComputeBudgetProgram,
+  PublicKey,
+  TransactionInstruction,
+} from "@solana/web3.js";
 
 /** The deployed AgentVault program ID */
 export const PROGRAM_ID = new PublicKey(
@@ -15,6 +19,26 @@ export const USDC_MINT = new PublicKey(
 export const USDC_DEVNET_MINT = new PublicKey(
   "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"
 );
+
+// ──────────────────────────────────────────────────────
+// Compute Budget
+// ──────────────────────────────────────────────────────
+
+/**
+ * Create compute budget instructions for priority fees.
+ * Prepend these to any transaction for faster inclusion.
+ */
+export function createComputeBudgetInstructions(
+  computeUnits: number = 200_000,
+  microLamportsPerCu: number = 1000
+): TransactionInstruction[] {
+  return [
+    ComputeBudgetProgram.setComputeUnitLimit({ units: computeUnits }),
+    ComputeBudgetProgram.setComputeUnitPrice({
+      microLamports: microLamportsPerCu,
+    }),
+  ];
+}
 
 // ──────────────────────────────────────────────────────
 // PDA Derivation helpers

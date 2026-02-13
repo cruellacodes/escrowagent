@@ -94,8 +94,10 @@ pub struct ResolveDispute<'info> {
     pub config: Account<'info, ProtocolConfig>,
 
     /// The escrow account
+    /// M-1: Close escrow after resolution, rent recovered to client
     #[account(
         mut,
+        close = client,
         constraint = escrow.arbitrator == arbitrator.key() @ AgentVaultError::UnauthorizedArbitrator,
         constraint = escrow.status == EscrowStatus::Disputed @ AgentVaultError::InvalidStatus,
     )]

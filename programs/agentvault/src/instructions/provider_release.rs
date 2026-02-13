@@ -35,8 +35,10 @@ pub struct ProviderRelease<'info> {
     pub config: Account<'info, ProtocolConfig>,
 
     /// The escrow account — must be ProofSubmitted and provider must match
+    /// M-1: Close escrow after release, rent recovered to client
     #[account(
         mut,
+        close = client,
         constraint = escrow.provider == provider.key() @ AgentVaultError::UnauthorizedProvider,
         constraint = escrow.status == EscrowStatus::ProofSubmitted @ AgentVaultError::NoProofSubmitted,
     )]

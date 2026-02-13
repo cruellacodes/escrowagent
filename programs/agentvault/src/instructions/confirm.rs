@@ -24,8 +24,10 @@ pub struct ConfirmCompletion<'info> {
 
     /// The escrow account
     /// M-2: Only MultiSigConfirm and OnChain verification types allow client confirmation
+    /// M-1: Close escrow after completion, rent recovered to client
     #[account(
         mut,
+        close = client,
         constraint = escrow.client == client.key() @ AgentVaultError::UnauthorizedClient,
         constraint = escrow.status == EscrowStatus::ProofSubmitted @ AgentVaultError::NoProofSubmitted,
         constraint = matches!(
