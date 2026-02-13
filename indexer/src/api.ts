@@ -308,8 +308,9 @@ export function buildApp() {
           ELSE 0
         END as dispute_rate,
         COALESCE(
-          ROUND(AVG(EXTRACT(EPOCH FROM (completed_at - created_at)))::numeric, 0)
-          FILTER (WHERE status = 'Completed' AND completed_at IS NOT NULL),
+          ROUND(
+            AVG(EXTRACT(EPOCH FROM (completed_at - created_at))) FILTER (WHERE status = 'Completed' AND completed_at IS NOT NULL)
+          , 0),
           0
         ) as avg_completion_seconds
       FROM escrows
