@@ -428,6 +428,16 @@ cd sdk/python && python -m build && twine upload dist/*
 - **Phase 4:** Escrow templates, batch escrows, agent discovery marketplace
 - **Phase 5:** Agent Router, streaming payments, more EVM chains (Arbitrum, Optimism), governance
 
+## Security
+
+Read [SECURITY.md](./SECURITY.md) for the full trust model, admin powers, known limitations, and how to report vulnerabilities.
+
+**Key points:**
+- Funds are held by smart contracts, not by any person
+- Admin cannot access escrowed funds (without a visible on-chain upgrade)
+- Fees are locked per-escrow at creation time
+- No external audit has been performed yet — review the code before escrowing significant funds
+
 ## License
 
 MIT
