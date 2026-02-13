@@ -1,7 +1,10 @@
 import {
   createPublicClient,
   createWalletClient,
+  decodeEventLog,
   http,
+  type PublicClient,
+  type WalletClient,
   type Chain,
   type Address,
   type Hex,
@@ -50,6 +53,8 @@ export class BaseEscrowClient implements IEscrowClient {
   private indexerUrl: string | null;
   private chain: Chain;
   private rpcUrl: string;
+  private publicClient: PublicClient;
+  private walletClient: WalletClient;
 
   constructor(config: AgentVaultConfig) {
     if (!config.privateKey) throw new Error("privateKey is required for Base chain");
@@ -62,17 +67,13 @@ export class BaseEscrowClient implements IEscrowClient {
     const chainId = config.chainId ?? 8453;
     this.chain = chainId === 84532 ? baseSepolia : base;
     this.rpcUrl = config.rpcUrl ?? (chainId === 84532 ? BASE_SEPOLIA_RPC : BASE_MAINNET_RPC);
-  }
 
-  private get publicClient() {
-    return createPublicClient({
+    this.publicClient = createPublicClient({
       chain: this.chain,
       transport: http(this.rpcUrl),
     });
-  }
 
-  private get walletClient() {
-    return createWalletClient({
+    this.walletClient = createWalletClient({
       account: this.account,
       chain: this.chain,
       transport: http(this.rpcUrl),
@@ -121,7 +122,8 @@ export class BaseEscrowClient implements IEscrowClient {
         functionName: "approve",
         args: [this.contractAddress, BigInt(params.amount)],
       });
-      await this.publicClient.waitForTransactionReceipt({ hash: approveHash });
+      const approveReceipt = await this.publicClient.waitForTransactionReceipt({ hash: approveHash });
+      if (approveReceipt.status === "reverted") throw new Error("Transaction reverted on-chain");
     }
 
     // Create escrow
@@ -145,14 +147,26 @@ export class BaseEscrowClient implements IEscrowClient {
     });
 
     const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
+    if (receipt.status === "reverted") throw new Error("Transaction reverted on-chain");
 
-    const nextId = await this.publicClient.readContract({
-      address: this.contractAddress,
-      abi: ESCROW_AGENT_ABI,
-      functionName: "nextEscrowId",
-    }) as bigint;
-
-    const escrowId = (nextId - 1n).toString();
+    // Parse EscrowCreated event from receipt logs to extract escrowId
+    let escrowId: string | undefined;
+    for (const log of receipt.logs) {
+      try {
+        const decoded = decodeEventLog({
+          abi: ESCROW_AGENT_ABI,
+          data: log.data,
+          topics: log.topics,
+        });
+        if (decoded.eventName === "EscrowCreated") {
+          escrowId = ((decoded.args as any).escrowId as bigint).toString();
+          break;
+        }
+      } catch {
+        // Not our event, skip
+      }
+    }
+    if (!escrowId) throw new Error("EscrowCreated event not found in transaction receipt");
 
     if (this.indexerUrl) {
       await this.storeTask(taskHash.slice(2), params.task);
@@ -173,14 +187,13 @@ export class BaseEscrowClient implements IEscrowClient {
       functionName: "acceptEscrow",
       args: [BigInt(escrowAddress)],
     });
-    await this.publicClient.waitForTransactionReceipt({ hash });
+    const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
+    if (receipt.status === "reverted") throw new Error("Transaction reverted on-chain");
     return hash;
   }
 
   async submitProof(escrowAddress: string, proof: SubmitProofParams): Promise<string> {
-    const proofData = typeof proof.data === "string"
-      ? (`0x${Buffer.from(proof.data).toString("hex")}` as Hex)
-      : (`0x${Buffer.from(proof.data).toString("hex")}` as Hex);
+    const proofHex = ("0x" + Buffer.from(typeof proof.data === "string" ? proof.data : proof.data).toString("hex")) as Hex;
 
     const hash = await this.walletClient.writeContract({
       chain: this.chain,
@@ -188,9 +201,10 @@ export class BaseEscrowClient implements IEscrowClient {
       address: this.contractAddress,
       abi: ESCROW_AGENT_ABI,
       functionName: "submitProof",
-      args: [BigInt(escrowAddress), proofTypeToUint8(proof.type), proofData],
+      args: [BigInt(escrowAddress), proofTypeToUint8(proof.type), proofHex],
     });
-    await this.publicClient.waitForTransactionReceipt({ hash });
+    const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
+    if (receipt.status === "reverted") throw new Error("Transaction reverted on-chain");
     return hash;
   }
 
@@ -203,7 +217,8 @@ export class BaseEscrowClient implements IEscrowClient {
       functionName: "confirmCompletion",
       args: [BigInt(escrowAddress)],
     });
-    await this.publicClient.waitForTransactionReceipt({ hash });
+    const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
+    if (receipt.status === "reverted") throw new Error("Transaction reverted on-chain");
     return hash;
   }
 
@@ -216,7 +231,8 @@ export class BaseEscrowClient implements IEscrowClient {
       functionName: "cancelEscrow",
       args: [BigInt(escrowAddress)],
     });
-    await this.publicClient.waitForTransactionReceipt({ hash });
+    const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
+    if (receipt.status === "reverted") throw new Error("Transaction reverted on-chain");
     return hash;
   }
 
@@ -230,8 +246,8 @@ export class BaseEscrowClient implements IEscrowClient {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          escrowAddress,
-          raisedBy: this.account.address,
+          escrow_address: escrowAddress,
+          raised_by: this.account.address,
           reason: params.reason,
         }),
       });
@@ -245,7 +261,8 @@ export class BaseEscrowClient implements IEscrowClient {
       functionName: "raiseDispute",
       args: [BigInt(escrowAddress)],
     });
-    await this.publicClient.waitForTransactionReceipt({ hash });
+    const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
+    if (receipt.status === "reverted") throw new Error("Transaction reverted on-chain");
     return hash;
   }
 
@@ -264,7 +281,54 @@ export class BaseEscrowClient implements IEscrowClient {
       functionName: "resolveDispute",
       args: [BigInt(escrowAddress), rulingArg],
     });
-    await this.publicClient.waitForTransactionReceipt({ hash });
+    const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
+    if (receipt.status === "reverted") throw new Error("Transaction reverted on-chain");
+    return hash;
+  }
+
+  // ──────────────────────────────────────────────────────
+  // EXPIRY & PROVIDER RELEASE
+  // ──────────────────────────────────────────────────────
+
+  async expireEscrow(escrowAddress: string): Promise<string> {
+    const hash = await this.walletClient.writeContract({
+      chain: this.chain,
+      account: this.account,
+      address: this.contractAddress,
+      abi: ESCROW_AGENT_ABI,
+      functionName: "expireEscrow",
+      args: [BigInt(escrowAddress)],
+    });
+    const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
+    if (receipt.status === "reverted") throw new Error("Transaction reverted on-chain");
+    return hash;
+  }
+
+  async providerRelease(escrowAddress: string): Promise<string> {
+    const hash = await this.walletClient.writeContract({
+      chain: this.chain,
+      account: this.account,
+      address: this.contractAddress,
+      abi: ESCROW_AGENT_ABI,
+      functionName: "providerRelease",
+      args: [BigInt(escrowAddress)],
+    });
+    const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
+    if (receipt.status === "reverted") throw new Error("Transaction reverted on-chain");
+    return hash;
+  }
+
+  async expireDispute(escrowAddress: string): Promise<string> {
+    const hash = await this.walletClient.writeContract({
+      chain: this.chain,
+      account: this.account,
+      address: this.contractAddress,
+      abi: ESCROW_AGENT_ABI,
+      functionName: "expireDispute",
+      args: [BigInt(escrowAddress)],
+    });
+    const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
+    if (receipt.status === "reverted") throw new Error("Transaction reverted on-chain");
     return hash;
   }
 
@@ -382,7 +446,7 @@ export class BaseEscrowClient implements IEscrowClient {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          taskHash,
+          task_hash: taskHash,
           description: task.description,
           criteria: task.criteria,
           metadata: task.metadata,

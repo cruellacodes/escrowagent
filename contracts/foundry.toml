@@ -5,6 +5,8 @@ libs = ["lib"]
 solc = "0.8.24"
 optimizer = true
 optimizer_runs = 200
+via_ir = true
+evm_version = "cancun"
 
 [rpc_endpoints]
 base = "${BASE_RPC_URL}"
@@ -14,6 +16,10 @@ localhost = "http://127.0.0.1:8545"
 [etherscan]
 base = { key = "${BASESCAN_API_KEY}", url = "https://api.basescan.org/api" }
 base_sepolia = { key = "${BASESCAN_API_KEY}", url = "https://api-sepolia.basescan.org/api" }
+
+[profile.ci]
+via_ir = false
+optimizer = false
 
 [fmt]
 line_length = 120

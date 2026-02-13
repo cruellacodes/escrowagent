@@ -355,6 +355,22 @@ export class SolanaEscrowClient implements IEscrowClient {
   }
 
   // ──────────────────────────────────────────────────────
+  // EXPIRY & PROVIDER RELEASE
+  // ──────────────────────────────────────────────────────
+
+  async expireEscrow(_escrowAddress: string): Promise<string> {
+    throw new Error("Not yet implemented for Solana");
+  }
+
+  async providerRelease(_escrowAddress: string): Promise<string> {
+    throw new Error("Not yet implemented for Solana");
+  }
+
+  async expireDispute(_escrowAddress: string): Promise<string> {
+    throw new Error("Not yet implemented for Solana");
+  }
+
+  // ──────────────────────────────────────────────────────
   // QUERIES
   // ──────────────────────────────────────────────────────
 

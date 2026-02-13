@@ -3,7 +3,6 @@ pragma solidity ^0.8.24;
 
 import {Test, console} from "forge-std/Test.sol";
 import {EscrowAgent} from "../src/EscrowAgent.sol";
-import {IEscrowAgent} from "../src/IEscrowAgent.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 /// @dev Mock ERC-20 token for testing (simulates USDC)
@@ -74,7 +73,7 @@ contract EscrowAgentTest is Test {
     }
 
     function test_UpdateConfig() public {
-        IEscrowAgent.ConfigUpdate memory update;
+        EscrowAgent.ConfigUpdate memory update;
         update.protocolFeeBps = 100;
         update.updateProtocolFeeBps = true;
 
@@ -85,7 +84,7 @@ contract EscrowAgentTest is Test {
     }
 
     function test_UpdateConfig_RevertIfNotAdmin() public {
-        IEscrowAgent.ConfigUpdate memory update;
+        EscrowAgent.ConfigUpdate memory update;
         update.protocolFeeBps = 100;
         update.updateProtocolFeeBps = true;
 
@@ -96,7 +95,7 @@ contract EscrowAgentTest is Test {
 
     function test_PauseAndUnpause() public {
         // Pause
-        IEscrowAgent.ConfigUpdate memory pauseUpdate;
+        EscrowAgent.ConfigUpdate memory pauseUpdate;
         pauseUpdate.paused = true;
         pauseUpdate.updatePaused = true;
 
@@ -114,12 +113,12 @@ contract EscrowAgentTest is Test {
             uint64(block.timestamp) + TEN_MINUTES,
             GRACE_PERIOD,
             taskHash,
-            IEscrowAgent.VerificationType.MultiSigConfirm,
+            EscrowAgent.VerificationType.MultiSigConfirm,
             1
         );
 
         // Unpause
-        IEscrowAgent.ConfigUpdate memory unpauseUpdate;
+        EscrowAgent.ConfigUpdate memory unpauseUpdate;
         unpauseUpdate.paused = false;
         unpauseUpdate.updatePaused = true;
 
@@ -136,7 +135,7 @@ contract EscrowAgentTest is Test {
             uint64(block.timestamp) + TEN_MINUTES,
             GRACE_PERIOD,
             taskHash,
-            IEscrowAgent.VerificationType.MultiSigConfirm,
+            EscrowAgent.VerificationType.MultiSigConfirm,
             1
         );
         assertEq(id, 1);
@@ -157,17 +156,17 @@ contract EscrowAgentTest is Test {
             uint64(block.timestamp) + TEN_MINUTES,
             GRACE_PERIOD,
             taskHash,
-            IEscrowAgent.VerificationType.MultiSigConfirm,
+            EscrowAgent.VerificationType.MultiSigConfirm,
             1
         );
         assertEq(escrowId, 1);
 
         // Verify escrow state
-        IEscrowAgent.Escrow memory e = escrowAgent.getEscrow(escrowId);
+        EscrowAgent.Escrow memory e = escrowAgent.getEscrow(escrowId);
         assertEq(e.client, client);
         assertEq(e.provider, provider);
         assertEq(e.amount, ESCROW_AMOUNT);
-        assertEq(uint8(e.status), uint8(IEscrowAgent.EscrowStatus.AwaitingProvider));
+        assertEq(uint8(e.status), uint8(EscrowAgent.EscrowStatus.AwaitingProvider));
 
         // Verify tokens moved to contract
         assertEq(usdc.balanceOf(address(escrowAgent)), ESCROW_AMOUNT);
@@ -178,15 +177,15 @@ contract EscrowAgentTest is Test {
         escrowAgent.acceptEscrow(escrowId);
 
         e = escrowAgent.getEscrow(escrowId);
-        assertEq(uint8(e.status), uint8(IEscrowAgent.EscrowStatus.Active));
+        assertEq(uint8(e.status), uint8(EscrowAgent.EscrowStatus.Active));
 
         // 3. Submit proof
         bytes memory proof = abi.encodePacked("tx-signature-proof-data-here");
         vm.prank(provider);
-        escrowAgent.submitProof(escrowId, IEscrowAgent.ProofType.TransactionSignature, proof);
+        escrowAgent.submitProof(escrowId, EscrowAgent.ProofType.TransactionSignature, proof);
 
         e = escrowAgent.getEscrow(escrowId);
-        assertEq(uint8(e.status), uint8(IEscrowAgent.EscrowStatus.ProofSubmitted));
+        assertEq(uint8(e.status), uint8(EscrowAgent.EscrowStatus.ProofSubmitted));
         assertTrue(e.proofSubmitted);
 
         // 4. Confirm completion
@@ -197,7 +196,7 @@ contract EscrowAgentTest is Test {
         escrowAgent.confirmCompletion(escrowId);
 
         e = escrowAgent.getEscrow(escrowId);
-        assertEq(uint8(e.status), uint8(IEscrowAgent.EscrowStatus.Completed));
+        assertEq(uint8(e.status), uint8(EscrowAgent.EscrowStatus.Completed));
 
         // Verify payouts: 0.5% fee = 250_000, provider gets 49_750_000
         uint256 expectedFee = (ESCROW_AMOUNT * 50) / 10_000; // 250_000
@@ -211,7 +210,7 @@ contract EscrowAgentTest is Test {
     function test_CreateEscrow_EmitsEvent() public {
         vm.prank(client);
         vm.expectEmit(true, true, true, true);
-        emit IEscrowAgent.EscrowCreated(
+        emit EscrowAgent.EscrowCreated(
             1,
             client,
             provider,
@@ -219,7 +218,7 @@ contract EscrowAgentTest is Test {
             address(usdc),
             uint64(block.timestamp) + TEN_MINUTES,
             taskHash,
-            IEscrowAgent.VerificationType.MultiSigConfirm
+            EscrowAgent.VerificationType.MultiSigConfirm
         );
         escrowAgent.createEscrow(
             provider,
@@ -229,7 +228,7 @@ contract EscrowAgentTest is Test {
             uint64(block.timestamp) + TEN_MINUTES,
             GRACE_PERIOD,
             taskHash,
-            IEscrowAgent.VerificationType.MultiSigConfirm,
+            EscrowAgent.VerificationType.MultiSigConfirm,
             1
         );
     }
@@ -244,7 +243,7 @@ contract EscrowAgentTest is Test {
             uint64(block.timestamp) + TEN_MINUTES,
             GRACE_PERIOD,
             taskHash,
-            IEscrowAgent.VerificationType.MultiSigConfirm,
+            EscrowAgent.VerificationType.MultiSigConfirm,
             1
         );
 
@@ -267,7 +266,7 @@ contract EscrowAgentTest is Test {
             uint64(block.timestamp) + TEN_MINUTES,
             GRACE_PERIOD,
             taskHash,
-            IEscrowAgent.VerificationType.MultiSigConfirm,
+            EscrowAgent.VerificationType.MultiSigConfirm,
             1
         );
     }
@@ -283,7 +282,7 @@ contract EscrowAgentTest is Test {
             uint64(block.timestamp) + TEN_MINUTES,
             GRACE_PERIOD,
             taskHash,
-            IEscrowAgent.VerificationType.MultiSigConfirm,
+            EscrowAgent.VerificationType.MultiSigConfirm,
             1
         );
     }
@@ -298,7 +297,7 @@ contract EscrowAgentTest is Test {
             uint64(block.timestamp) + TEN_MINUTES,
             GRACE_PERIOD,
             taskHash,
-            IEscrowAgent.VerificationType.MultiSigConfirm,
+            EscrowAgent.VerificationType.MultiSigConfirm,
             1
         );
 
@@ -312,7 +311,7 @@ contract EscrowAgentTest is Test {
             uint64(block.timestamp) + TEN_MINUTES,
             GRACE_PERIOD,
             taskHash, // same key
-            IEscrowAgent.VerificationType.MultiSigConfirm,
+            EscrowAgent.VerificationType.MultiSigConfirm,
             1
         );
     }
@@ -334,7 +333,7 @@ contract EscrowAgentTest is Test {
             uint64(block.timestamp) + TEN_MINUTES,
             GRACE_PERIOD,
             taskHash,
-            IEscrowAgent.VerificationType.MultiSigConfirm,
+            EscrowAgent.VerificationType.MultiSigConfirm,
             1
         );
 
@@ -344,8 +343,8 @@ contract EscrowAgentTest is Test {
         vm.prank(client);
         escrowAgent.cancelEscrow(escrowId);
 
-        IEscrowAgent.Escrow memory e = escrowAgent.getEscrow(escrowId);
-        assertEq(uint8(e.status), uint8(IEscrowAgent.EscrowStatus.Cancelled));
+        EscrowAgent.Escrow memory e = escrowAgent.getEscrow(escrowId);
+        assertEq(uint8(e.status), uint8(EscrowAgent.EscrowStatus.Cancelled));
 
         // Full refund — no fees
         assertEq(usdc.balanceOf(client), clientBalanceBefore);
@@ -362,7 +361,7 @@ contract EscrowAgentTest is Test {
             uint64(block.timestamp) + TEN_MINUTES,
             GRACE_PERIOD,
             taskHash,
-            IEscrowAgent.VerificationType.MultiSigConfirm,
+            EscrowAgent.VerificationType.MultiSigConfirm,
             1
         );
 
@@ -391,7 +390,7 @@ contract EscrowAgentTest is Test {
             uint64(block.timestamp) + TEN_MINUTES,
             GRACE_PERIOD,
             taskHash,
-            IEscrowAgent.VerificationType.MultiSigConfirm,
+            EscrowAgent.VerificationType.MultiSigConfirm,
             1
         );
 
@@ -403,8 +402,8 @@ contract EscrowAgentTest is Test {
         vm.prank(random);
         escrowAgent.expireEscrow(escrowId);
 
-        IEscrowAgent.Escrow memory e = escrowAgent.getEscrow(escrowId);
-        assertEq(uint8(e.status), uint8(IEscrowAgent.EscrowStatus.Expired));
+        EscrowAgent.Escrow memory e = escrowAgent.getEscrow(escrowId);
+        assertEq(uint8(e.status), uint8(EscrowAgent.EscrowStatus.Expired));
         assertEq(usdc.balanceOf(client), clientBalanceBefore);
     }
 
@@ -418,7 +417,7 @@ contract EscrowAgentTest is Test {
             uint64(block.timestamp) + TEN_MINUTES,
             GRACE_PERIOD,
             taskHash,
-            IEscrowAgent.VerificationType.MultiSigConfirm,
+            EscrowAgent.VerificationType.MultiSigConfirm,
             1
         );
 
@@ -441,7 +440,7 @@ contract EscrowAgentTest is Test {
             uint64(block.timestamp) + TEN_MINUTES,
             GRACE_PERIOD,
             taskHash,
-            IEscrowAgent.VerificationType.MultiSigConfirm,
+            EscrowAgent.VerificationType.MultiSigConfirm,
             1
         );
 
@@ -449,7 +448,7 @@ contract EscrowAgentTest is Test {
         escrowAgent.acceptEscrow(escrowId);
 
         vm.prank(provider);
-        escrowAgent.submitProof(escrowId, IEscrowAgent.ProofType.TransactionSignature, "proof");
+        escrowAgent.submitProof(escrowId, EscrowAgent.ProofType.TransactionSignature, "proof");
 
         // Warp past grace period
         vm.warp(block.timestamp + GRACE_PERIOD + 1);
@@ -478,7 +477,7 @@ contract EscrowAgentTest is Test {
             uint64(block.timestamp) + TEN_MINUTES,
             GRACE_PERIOD,
             taskHash,
-            IEscrowAgent.VerificationType.MultiSigConfirm,
+            EscrowAgent.VerificationType.MultiSigConfirm,
             1
         );
 
@@ -486,14 +485,14 @@ contract EscrowAgentTest is Test {
         escrowAgent.acceptEscrow(escrowId);
 
         vm.prank(provider);
-        escrowAgent.submitProof(escrowId, IEscrowAgent.ProofType.TransactionSignature, "proof");
+        escrowAgent.submitProof(escrowId, EscrowAgent.ProofType.TransactionSignature, "proof");
 
         // Client raises dispute
         vm.prank(client);
         escrowAgent.raiseDispute(escrowId);
 
-        IEscrowAgent.Escrow memory e = escrowAgent.getEscrow(escrowId);
-        assertEq(uint8(e.status), uint8(IEscrowAgent.EscrowStatus.Disputed));
+        EscrowAgent.Escrow memory e = escrowAgent.getEscrow(escrowId);
+        assertEq(uint8(e.status), uint8(EscrowAgent.EscrowStatus.Disputed));
         assertEq(e.disputeRaisedBy, client);
 
         // Arbitrator resolves with 50/50 split
@@ -502,8 +501,8 @@ contract EscrowAgentTest is Test {
         uint256 arbBefore = usdc.balanceOf(arbitrator);
         uint256 feeBefore = usdc.balanceOf(feeWallet);
 
-        IEscrowAgent.DisputeRuling memory ruling = IEscrowAgent.DisputeRuling({
-            rulingType: IEscrowAgent.DisputeRulingType.Split,
+        EscrowAgent.DisputeRuling memory ruling = EscrowAgent.DisputeRuling({
+            rulingType: EscrowAgent.DisputeRulingType.Split,
             clientBps: 5000,
             providerBps: 5000
         });
@@ -512,7 +511,7 @@ contract EscrowAgentTest is Test {
         escrowAgent.resolveDispute(escrowId, ruling);
 
         e = escrowAgent.getEscrow(escrowId);
-        assertEq(uint8(e.status), uint8(IEscrowAgent.EscrowStatus.Resolved));
+        assertEq(uint8(e.status), uint8(EscrowAgent.EscrowStatus.Resolved));
 
         // Verify payouts:
         // protocol fee: 0.5% = 250_000
@@ -543,7 +542,7 @@ contract EscrowAgentTest is Test {
             uint64(block.timestamp) + TEN_MINUTES,
             GRACE_PERIOD,
             taskHash,
-            IEscrowAgent.VerificationType.MultiSigConfirm,
+            EscrowAgent.VerificationType.MultiSigConfirm,
             1
         );
 
@@ -551,15 +550,15 @@ contract EscrowAgentTest is Test {
         escrowAgent.acceptEscrow(escrowId);
 
         vm.prank(provider);
-        escrowAgent.submitProof(escrowId, IEscrowAgent.ProofType.TransactionSignature, "proof");
+        escrowAgent.submitProof(escrowId, EscrowAgent.ProofType.TransactionSignature, "proof");
 
         vm.prank(client);
         escrowAgent.raiseDispute(escrowId);
 
         uint256 clientBefore = usdc.balanceOf(client);
 
-        IEscrowAgent.DisputeRuling memory ruling = IEscrowAgent.DisputeRuling({
-            rulingType: IEscrowAgent.DisputeRulingType.PayClient,
+        EscrowAgent.DisputeRuling memory ruling = EscrowAgent.DisputeRuling({
+            rulingType: EscrowAgent.DisputeRulingType.PayClient,
             clientBps: 0,
             providerBps: 0
         });
@@ -584,7 +583,7 @@ contract EscrowAgentTest is Test {
             uint64(block.timestamp) + TEN_MINUTES,
             GRACE_PERIOD,
             taskHash,
-            IEscrowAgent.VerificationType.MultiSigConfirm,
+            EscrowAgent.VerificationType.MultiSigConfirm,
             1
         );
 

@@ -9,8 +9,8 @@
     "build": "anchor build",
     "build:base": "cd contracts && forge build",
     "deploy:devnet": "anchor deploy --provider.cluster devnet",
-    "deploy:base-sepolia": "cd contracts && forge script script/Deploy.s.sol --rpc-url https://sepolia.base.org --broadcast --verify",
-    "deploy:base-mainnet": "cd contracts && forge script script/Deploy.s.sol --rpc-url https://mainnet.base.org --broadcast --verify",
+    "deploy:base-sepolia": "cd contracts && forge script script/DeployUpgradeable.s.sol --rpc-url $BASE_RPC_URL --broadcast --verify",
+    "deploy:base-mainnet": "cd contracts && forge script script/DeployUpgradeable.s.sol --rpc-url $BASE_RPC_URL --broadcast --verify",
     "lint": "eslint tests/ sdk/"
   },
   "dependencies": {

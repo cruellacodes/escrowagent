@@ -41,6 +41,7 @@ export function buildApp() {
       status,
       client,
       provider,
+      chain,
       limit = "50",
       offset = "0",
     } = request.query as Record<string, string>;
@@ -49,6 +50,10 @@ export function buildApp() {
     const params: any[] = [];
     let paramIndex = 1;
 
+    if (chain) {
+      sql += ` AND chain = $${paramIndex++}`;
+      params.push(chain);
+    }
     if (status) {
       sql += ` AND status = $${paramIndex++}`;
       params.push(status);

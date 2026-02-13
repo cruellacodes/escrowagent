@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from datetime import datetime, timezone
 from typing import Optional
 
 import httpx
@@ -136,6 +137,27 @@ ESCROW_AGENT_ABI = [
         "outputs": [],
     },
     {
+        "name": "expireEscrow",
+        "type": "function",
+        "stateMutability": "nonpayable",
+        "inputs": [{"name": "escrowId", "type": "uint256"}],
+        "outputs": [],
+    },
+    {
+        "name": "providerRelease",
+        "type": "function",
+        "stateMutability": "nonpayable",
+        "inputs": [{"name": "escrowId", "type": "uint256"}],
+        "outputs": [],
+    },
+    {
+        "name": "expireDispute",
+        "type": "function",
+        "stateMutability": "nonpayable",
+        "inputs": [{"name": "escrowId", "type": "uint256"}],
+        "outputs": [],
+    },
+    {
         "name": "getEscrow",
         "type": "function",
         "stateMutability": "view",
@@ -261,13 +283,12 @@ class BaseEscrowClient:
 
     async def create_escrow(self, params: CreateEscrowParams) -> TransactionResult:
         """Create a new escrow on Base, depositing ERC-20 tokens."""
-        task_hash = _hash_task(params.task_description, params.criteria)
+        task = params.task or {}
+        description = task.get("description", "")
+        criteria = task.get("criteria", [])
+        task_hash = _hash_task(description, criteria)
 
-        deadline = (
-            int(params.deadline.timestamp())
-            if hasattr(params.deadline, "timestamp")
-            else params.deadline
-        )
+        deadline = params.deadline_seconds
         grace_period = params.grace_period or 300
         verification = VERIFICATION_TYPE_MAP.get(params.verification, 2)
 
@@ -297,7 +318,7 @@ class BaseEscrowClient:
             grace_period,
             task_hash,
             verification,
-            len(params.criteria),
+            len(criteria),
         ).build_transaction(await self._tx_params())
 
         receipt = await self._send_tx(tx)
@@ -319,7 +340,7 @@ class BaseEscrowClient:
 
     async def submit_proof(self, escrow_address: str, proof: SubmitProofParams) -> str:
         proof_type = PROOF_TYPE_MAP.get(proof.proof_type, 0)
-        proof_data = proof.proof_data.encode() if isinstance(proof.proof_data, str) else proof.proof_data
+        proof_data = proof.data.encode() if isinstance(proof.data, str) else proof.data
 
         tx = await self.contract.functions.submitProof(
             int(escrow_address), proof_type, proof_data
@@ -370,13 +391,84 @@ class BaseEscrowClient:
         receipt = await self._send_tx(tx)
         return receipt["transactionHash"].hex()
 
+    async def expire_escrow(self, escrow_address: str) -> str:
+        """Anyone can expire an escrow after deadline + grace period."""
+        tx = await self.contract.functions.expireEscrow(int(escrow_address)).build_transaction(
+            await self._tx_params()
+        )
+        receipt = await self._send_tx(tx)
+        return receipt["transactionHash"].hex()
+
+    async def provider_release(self, escrow_address: str) -> str:
+        """Provider self-releases funds after confirmation timeout."""
+        tx = await self.contract.functions.providerRelease(int(escrow_address)).build_transaction(
+            await self._tx_params()
+        )
+        receipt = await self._send_tx(tx)
+        return receipt["transactionHash"].hex()
+
+    async def expire_dispute(self, escrow_address: str) -> str:
+        """Anyone can expire a dispute after the timeout. Refunds client."""
+        tx = await self.contract.functions.expireDispute(int(escrow_address)).build_transaction(
+            await self._tx_params()
+        )
+        receipt = await self._send_tx(tx)
+        return receipt["transactionHash"].hex()
+
     async def get_escrow(self, escrow_address: str) -> EscrowInfo:
         if self.indexer_url:
             resp = await self._http.get(f"{self.indexer_url}/escrows/{escrow_address}")
-            return EscrowInfo(**resp.json())
+            data = resp.json()
+            # Indexer returns {...escrow, task, proofs}; extract escrow fields
+            return self._parse_indexer_escrow(data)
 
         data = await self.contract.functions.getEscrow(int(escrow_address)).call()
         return self._parse_escrow(escrow_address, data)
+
+    async def list_escrows(
+        self,
+        status: Optional[str] = None,
+        client: Optional[str] = None,
+        provider: Optional[str] = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[EscrowInfo]:
+        """List escrows. Uses indexer API if available; otherwise falls back to chain iteration."""
+        if self.indexer_url:
+            params: dict[str, str | int] = {"limit": limit, "offset": offset, "chain": "base"}
+            if status:
+                params["status"] = status
+            if client:
+                params["client"] = client
+            if provider:
+                params["provider"] = provider
+            resp = await self._http.get(f"{self.indexer_url}/escrows", params=params)
+            resp.raise_for_status()
+            return [self._parse_indexer_escrow(e) for e in resp.json()]
+
+        # Fall back to chain iteration
+        next_id = await self.contract.functions.nextEscrowId().call()
+        result: list[EscrowInfo] = []
+        skipped = 0
+        for i in range(int(next_id) - 1, 0, -1):
+            if len(result) >= limit:
+                break
+            try:
+                data = await self.contract.functions.getEscrow(i).call()
+                escrow = self._parse_escrow(str(i), data)
+                if status and escrow.status.value != status:
+                    continue
+                if client and escrow.client.lower() != client.lower():
+                    continue
+                if provider and escrow.provider.lower() != provider.lower():
+                    continue
+                if skipped < offset:
+                    skipped += 1
+                    continue
+                result.append(escrow)
+            except Exception:
+                continue
+        return result
 
     async def get_agent_stats(self, agent_address: str) -> AgentStats:
         if not self.indexer_url:
@@ -403,8 +495,6 @@ class BaseEscrowClient:
         return await self.w3.eth.wait_for_transaction_receipt(tx_hash)
 
     def _parse_escrow(self, escrow_id: str, data) -> EscrowInfo:
-        from datetime import datetime
-
         return EscrowInfo(
             address=escrow_id,
             client=data[0],
@@ -416,9 +506,54 @@ class BaseEscrowClient:
             status=STATUS_MAP.get(data[13], EscrowStatus.AWAITING_PROVIDER),
             verification_type=VERIFICATION_REVERSE_MAP.get(data[8], VerificationType.MULTI_SIG_CONFIRM),
             task_hash=data[7].hex(),
-            deadline=datetime.fromtimestamp(data[11]),
+            deadline=datetime.fromtimestamp(data[11], tz=timezone.utc),
             grace_period=data[12],
-            created_at=datetime.fromtimestamp(data[10]),
+            created_at=datetime.fromtimestamp(data[10], tz=timezone.utc),
             proof_type=PROOF_REVERSE_MAP.get(data[14]) if data[15] else None,
-            proof_submitted_at=datetime.fromtimestamp(data[17]) if data[17] > 0 else None,
+            proof_submitted_at=datetime.fromtimestamp(data[17], tz=timezone.utc) if data[17] > 0 else None,
+        )
+
+    def _parse_indexer_escrow(self, row: dict) -> EscrowInfo:
+        """Convert indexer API row to EscrowInfo."""
+        def _parse_ts(v) -> Optional[datetime]:
+            if v is None:
+                return None
+            if isinstance(v, (int, float)):
+                return datetime.fromtimestamp(int(v), tz=timezone.utc)
+            if isinstance(v, str):
+                return datetime.fromisoformat(v.replace("Z", "+00:00"))
+            return None
+
+        def _verification(s: Optional[str]) -> VerificationType:
+            if not s:
+                return VerificationType.MULTI_SIG_CONFIRM
+            for vt in VerificationType:
+                if vt.value == s:
+                    return vt
+            return VerificationType.MULTI_SIG_CONFIRM
+
+        def _proof_type(s: Optional[str]) -> Optional[ProofType]:
+            if not s:
+                return None
+            for pt in ProofType:
+                if pt.value == s:
+                    return pt
+            return None
+
+        return EscrowInfo(
+            address=row.get("escrow_address", row.get("address", "")),
+            client=row.get("client_address", row.get("client", "")),
+            provider=row.get("provider_address", row.get("provider", "")),
+            arbitrator=row.get("arbitrator_address") or row.get("arbitrator"),
+            token_mint=row.get("token_mint", ""),
+            amount=int(row.get("amount", 0)),
+            protocol_fee_bps=int(row.get("protocol_fee_bps", 0)),
+            status=EscrowStatus(row["status"]) if "status" in row else EscrowStatus.AWAITING_PROVIDER,
+            verification_type=_verification(row.get("verification_type")),
+            task_hash=row.get("task_hash", ""),
+            deadline=_parse_ts(row.get("deadline")) or datetime.now(timezone.utc),
+            grace_period=int(row.get("grace_period", 0)),
+            created_at=_parse_ts(row.get("created_at")) or datetime.now(timezone.utc),
+            proof_type=_proof_type(row.get("proof_type")),
+            proof_submitted_at=_parse_ts(row.get("proof_submitted_at")),
         )

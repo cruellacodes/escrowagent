@@ -30,7 +30,7 @@ const MIGRATION_SQL = `
 -- Core escrow records (indexed from on-chain events)
 CREATE TABLE IF NOT EXISTS escrows (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    escrow_address TEXT UNIQUE NOT NULL,
+    escrow_address TEXT NOT NULL,
     client_address TEXT NOT NULL,
     provider_address TEXT NOT NULL,
     arbitrator_address TEXT,
@@ -46,7 +46,8 @@ CREATE TABLE IF NOT EXISTS escrows (
     updated_at TIMESTAMP DEFAULT NOW(),
     completed_at TIMESTAMP,
     tx_signature TEXT,
-    chain VARCHAR(10) NOT NULL DEFAULT 'solana'
+    chain VARCHAR(10) NOT NULL DEFAULT 'solana',
+    UNIQUE(escrow_address, chain)
 );
 
 -- Full task descriptions (stored off-chain, hash on-chain)
@@ -148,7 +149,7 @@ export async function upsertEscrow(escrow: {
       token_mint, amount, status, verification_type, task_hash,
       deadline, grace_period, tx_signature, chain
     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-    ON CONFLICT (escrow_address)
+    ON CONFLICT (escrow_address, chain)
     DO UPDATE SET status = $7, updated_at = NOW()`,
     [
       escrow.escrow_address,
@@ -173,9 +174,15 @@ export async function updateEscrowStatus(
   status: string,
   completedAt?: Date
 ) {
+  if (completedAt) {
+    return query(
+      `UPDATE escrows SET status = $1, updated_at = NOW(), completed_at = $3 WHERE escrow_address = $2`,
+      [status, escrowAddress, completedAt]
+    );
+  }
   return query(
-    `UPDATE escrows SET status = $1, updated_at = NOW(), completed_at = $3 WHERE escrow_address = $2`,
-    [status, escrowAddress, completedAt || null]
+    `UPDATE escrows SET status = $1, updated_at = NOW() WHERE escrow_address = $2`,
+    [status, escrowAddress]
   );
 }
 

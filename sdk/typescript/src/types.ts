@@ -144,6 +144,9 @@ export interface IEscrowClient {
   cancelEscrow(escrowAddress: string): Promise<string>;
   raiseDispute(escrowAddress: string, params: { reason: string }): Promise<string>;
   resolveDispute(escrowAddress: string, ruling: DisputeRuling): Promise<string>;
+  expireEscrow(escrowAddress: string): Promise<string>;
+  providerRelease(escrowAddress: string): Promise<string>;
+  expireDispute(escrowAddress: string): Promise<string>;
   getEscrow(escrowAddress: string): Promise<EscrowInfo>;
   listEscrows(filter?: ListEscrowsFilter): Promise<EscrowInfo[]>;
   getAgentStats(agentAddress: string): Promise<AgentStats>;

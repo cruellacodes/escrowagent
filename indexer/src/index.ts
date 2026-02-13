@@ -13,6 +13,10 @@ import { migrate } from "./db";
 const PORT = parseInt(process.env.PORT || "3001", 10);
 const HOST = process.env.HOST || "0.0.0.0";
 
+if (!process.env.BASE_RPC_URL && process.env.NODE_ENV === "production") {
+  throw new Error("BASE_RPC_URL is required in production");
+}
+
 // Solana config
 const SOLANA_RPC_URL =
   process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com";

@@ -164,6 +164,13 @@ export const ESCROW_AGENT_ABI = [
     outputs: [],
   },
   {
+    name: "expireDispute",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "escrowId", type: "uint256" }],
+    outputs: [],
+  },
+  {
     name: "raiseDispute",
     type: "function",
     stateMutability: "nonpayable",

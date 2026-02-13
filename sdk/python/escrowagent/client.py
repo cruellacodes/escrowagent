@@ -89,6 +89,27 @@ class AgentVault:
     async def get_escrow(self, escrow_address: str):
         return await self._client.get_escrow(escrow_address)
 
+    async def list_escrows(
+        self,
+        status=None,
+        client=None,
+        provider=None,
+        limit=50,
+        offset=0,
+    ):
+        return await self._client.list_escrows(
+            status=status, client=client, provider=provider, limit=limit, offset=offset
+        )
+
+    async def expire_escrow(self, escrow_address: str):
+        return await self._client.expire_escrow(escrow_address)
+
+    async def provider_release(self, escrow_address: str):
+        return await self._client.provider_release(escrow_address)
+
+    async def expire_dispute(self, escrow_address: str):
+        return await self._client.expire_dispute(escrow_address)
+
     async def get_agent_stats(self, agent_address: str):
         return await self._client.get_agent_stats(agent_address)
 

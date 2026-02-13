@@ -82,6 +82,18 @@ export class AgentVault implements IEscrowClient {
     return this.client.resolveDispute(escrowAddress, ruling);
   }
 
+  expireEscrow(escrowAddress: string): Promise<string> {
+    return this.client.expireEscrow(escrowAddress);
+  }
+
+  providerRelease(escrowAddress: string): Promise<string> {
+    return this.client.providerRelease(escrowAddress);
+  }
+
+  expireDispute(escrowAddress: string): Promise<string> {
+    return this.client.expireDispute(escrowAddress);
+  }
+
   getEscrow(escrowAddress: string): Promise<EscrowInfo> {
     return this.client.getEscrow(escrowAddress);
   }

@@ -5,16 +5,55 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
-import {IEscrowAgent} from "./IEscrowAgent.sol";
-
 /**
  * @title EscrowAgent
- * @notice Trustless escrow & settlement layer for autonomous agent-to-agent transactions on Base.
+ * @notice Non-upgradeable version — for testnet/reference only. Use EscrowAgentUUPS for mainnet.
  * @dev Ports the Solana/Anchor EscrowAgent program to EVM. The contract itself acts as the
  *      token custodian (no PDA vaults needed). Uses OpenZeppelin for security primitives.
  */
-contract EscrowAgent is IEscrowAgent, ReentrancyGuard, Pausable {
+contract EscrowAgent is ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;
+
+    // ──────────────────────────────────────────────────────
+    // Types (inline — not using IEscrowAgent to avoid interface drift)
+    // ──────────────────────────────────────────────────────
+
+    enum EscrowStatus { AwaitingProvider, Active, ProofSubmitted, Completed, Disputed, Resolved, Expired, Cancelled }
+    enum VerificationType { OnChain, OracleCallback, MultiSigConfirm, AutoRelease }
+    enum ProofType { TransactionSignature, OracleAttestation, SignedConfirmation }
+    enum DisputeRulingType { PayClient, PayProvider, Split }
+
+    struct Escrow {
+        address client; address provider; address arbitrator; address tokenAddress;
+        uint256 amount; uint16 protocolFeeBps; uint16 arbitratorFeeBps; bytes32 taskHash;
+        VerificationType verificationType; uint8 criteriaCount;
+        uint64 createdAt; uint64 deadline; uint64 gracePeriod; EscrowStatus status;
+        ProofType proofType; bool proofSubmitted; bytes proofData;
+        uint64 proofSubmittedAt; address disputeRaisedBy;
+    }
+
+    struct DisputeRuling {
+        DisputeRulingType rulingType; uint16 clientBps; uint16 providerBps;
+    }
+
+    struct ConfigUpdate {
+        address feeAuthority; uint16 protocolFeeBps; uint16 arbitratorFeeBps;
+        uint256 minEscrowAmount; uint256 maxEscrowAmount;
+        uint64 minGracePeriod; uint64 maxDeadlineSeconds; bool paused; address newAdmin;
+        bool updateFeeAuthority; bool updateProtocolFeeBps; bool updateArbitratorFeeBps;
+        bool updateMinEscrowAmount; bool updateMaxEscrowAmount;
+        bool updateMinGracePeriod; bool updateMaxDeadlineSeconds; bool updatePaused; bool updateAdmin;
+    }
+
+    // ── Events ──
+    event EscrowCreated(uint256 indexed escrowId, address indexed client, address indexed provider, uint256 amount, address tokenAddress, uint64 deadline, bytes32 taskHash, VerificationType verificationType);
+    event EscrowAccepted(uint256 indexed escrowId, address indexed provider, uint64 acceptedAt);
+    event EscrowProofSubmitted(uint256 indexed escrowId, address indexed provider, ProofType proofType, uint64 submittedAt);
+    event EscrowCompleted(uint256 indexed escrowId, uint256 amountPaid, uint256 feeCollected, uint64 completedAt);
+    event EscrowCancelled(uint256 indexed escrowId, address indexed client, uint64 cancelledAt);
+    event EscrowExpired(uint256 indexed escrowId, uint64 expiredAt, uint256 refundAmount);
+    event DisputeRaised(uint256 indexed escrowId, address indexed raisedBy, uint64 raisedAt);
+    event DisputeResolved(uint256 indexed escrowId, address indexed arbitrator, DisputeRulingType ruling, uint64 resolvedAt);
 
     // ──────────────────────────────────────────────────────
     // Errors

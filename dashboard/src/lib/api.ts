@@ -27,10 +27,23 @@ export interface EscrowRow {
   completed_at: string | null;
 }
 
+const defaultStats: ProtocolStats = {
+  totalEscrows: 0,
+  completedEscrows: 0,
+  activeEscrows: 0,
+  disputedEscrows: 0,
+  totalVolume: 0,
+  completedVolume: 0,
+};
+
 export async function fetchStats(): Promise<ProtocolStats> {
-  const res = await fetch(`${API_URL}/stats`, { next: { revalidate: 30 } });
-  if (!res.ok) throw new Error("Failed to fetch stats");
-  return res.json();
+  try {
+    const res = await fetch(`${API_URL}/stats`, { next: { revalidate: 30 } });
+    if (!res.ok) return defaultStats;
+    return res.json();
+  } catch {
+    return defaultStats;
+  }
 }
 
 export async function fetchEscrows(params?: {
@@ -40,18 +53,22 @@ export async function fetchEscrows(params?: {
   limit?: number;
   offset?: number;
 }): Promise<EscrowRow[]> {
-  const searchParams = new URLSearchParams();
-  if (params?.status) searchParams.set("status", params.status);
-  if (params?.client) searchParams.set("client", params.client);
-  if (params?.provider) searchParams.set("provider", params.provider);
-  if (params?.limit) searchParams.set("limit", params.limit.toString());
-  if (params?.offset) searchParams.set("offset", params.offset.toString());
+  try {
+    const searchParams = new URLSearchParams();
+    if (params?.status) searchParams.set("status", params.status);
+    if (params?.client) searchParams.set("client", params.client);
+    if (params?.provider) searchParams.set("provider", params.provider);
+    if (params?.limit) searchParams.set("limit", params.limit.toString());
+    if (params?.offset) searchParams.set("offset", params.offset.toString());
 
-  const res = await fetch(`${API_URL}/escrows?${searchParams.toString()}`, {
-    next: { revalidate: 10 },
-  });
-  if (!res.ok) throw new Error("Failed to fetch escrows");
-  return res.json();
+    const res = await fetch(`${API_URL}/escrows?${searchParams.toString()}`, {
+      next: { revalidate: 10 },
+    });
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
 }
 
 export async function fetchEscrow(address: string): Promise<EscrowRow & { task: any; proofs: any[] }> {

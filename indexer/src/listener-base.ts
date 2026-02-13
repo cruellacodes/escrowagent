@@ -126,6 +126,9 @@ export class BaseEventListener {
       case "DisputeResolved":
         await this.handleStatusUpdate(log as any, txHash, "Resolved");
         break;
+      case "DisputeExpired":
+        await this.handleStatusUpdate(log as any, txHash, "Resolved");
+        break;
       default:
         console.log(`[Base Listener] Unhandled event: ${eventName}`);
     }
@@ -156,6 +159,8 @@ export class BaseEventListener {
       tx_signature: txHash,
       chain: "base",
     });
+    await db.upsertAgentStats(args.client);
+    await db.upsertAgentStats(args.provider);
 
     console.log(
       `[Base Handler] Upserted EscrowCreated: ${escrowId} (tx ${txHash})`

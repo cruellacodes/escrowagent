@@ -651,6 +651,18 @@ class AgentVault:
             result = [e for e in result if e.provider == provider]
         return result[offset : offset + limit]
 
+    async def expire_escrow(self, escrow_address: str) -> str:
+        """Not implemented on Solana — use Base chain for this action."""
+        raise NotImplementedError("expire_escrow is not supported on Solana")
+
+    async def provider_release(self, escrow_address: str) -> str:
+        """Not implemented on Solana — use Base chain for this action."""
+        raise NotImplementedError("provider_release is not supported on Solana")
+
+    async def expire_dispute(self, escrow_address: str) -> str:
+        """Not implemented on Solana — use Base chain for this action."""
+        raise NotImplementedError("expire_dispute is not supported on Solana")
+
     # ──────────────────────────────────────────────────────
     # INTERNAL
     # ──────────────────────────────────────────────────────
