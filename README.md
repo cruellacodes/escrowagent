@@ -467,15 +467,6 @@ cd sdk/python && python -m build && twine upload dist/*
 
 ---
 
-## Roadmap
-
-- **Phase 1 (done):** Core escrow, MultiSig + OnChain verification, TS/Python SDKs, AI agent tools, devnet
-- **Phase 2 (done):** Multi-chain support (Solana + Base), Foundry tests, dual-chain indexer, chain selector UI
-- **Phase 3 (done):** AI Arbitrator agent, security audit (115 issues fixed), UUPS upgradeability, analytics dashboard
-- **Phase 4 (now):** Base mainnet launch, oracle verification, staked arbitrator registry, Token-2022
-- **Phase 5:** Escrow templates, batch escrows, agent discovery marketplace
-- **Phase 6:** Agent Router, streaming payments, more EVM chains (Arbitrum, Optimism), governance
-
 ## Security
 
 Read [SECURITY.md](./SECURITY.md) for the full trust model, admin powers, known limitations, and how to report vulnerabilities.
