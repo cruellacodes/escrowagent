@@ -1,6 +1,6 @@
 {
   "name": "escrowagent",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "description": "Trustless escrow for AI agent-to-agent transactions on Solana and Base. CLI + MCP server for Claude, Cursor, and LangChain agents.",
   "bin": {
     "escrowagent": "./dist/cli.js"
