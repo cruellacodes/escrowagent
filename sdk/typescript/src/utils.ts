@@ -15,6 +15,11 @@ export const USDC_MINT = new PublicKey(
   "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
 );
 
+/** EscrowAgent Default AI Arbitrator (Solana) */
+export const DEFAULT_ARBITRATOR_SOLANA = new PublicKey(
+  "C8xn3TXJXxaKijq3AMMY1k1Su3qdA4cG9z3AMBjfRnfr"
+);
+
 /** Well-known USDC mint on Solana devnet */
 export const USDC_DEVNET_MINT = new PublicKey(
   "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"

@@ -39,3 +39,6 @@ coverage/
 
 # Internal security docs (private — do not publish)
 docs/INTERNAL_SECURITY_AUDIT.md
+
+# Arbitrator keypair (NEVER commit)
+arbitrator-keypair.json
