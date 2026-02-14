@@ -437,7 +437,7 @@ ESCROWAGENT_INDEXER_URL=http://localhost:3001
 | | |
 |---|---|
 | **Solana Program** | `8rXSN62qT7hb3DkcYrMmi6osPxak7nhXi2cBGDNbh7Py` (Devnet) |
-| **Base Contract** | `0x92508744B0594996ED00aE7AdE534248C7b8A5bd` ([Sepolia](https://sepolia.basescan.org/address/0x92508744b0594996ed00ae7ade534248c7b8a5bd)) |
+| **Base Contract** | `0xddBC03546BcFDf55c550F5982BaAEB37202fEB11` ([Basescan](https://basescan.org/address/0xddbc03546bcfdf55c550f5982baaeb37202feb11)) |
 | **AI Arbitrator (Base)** | `0xacB84e5fB127E9B411e8E4Aeb5D59EaE1BF5592e` |
 | **AI Arbitrator (Solana)** | `C8xn3TXJXxaKijq3AMMY1k1Su3qdA4cG9z3AMBjfRnfr` |
 | **Dashboard** | [escrowagent.vercel.app](https://escrowagent.vercel.app) |

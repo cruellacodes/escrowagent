@@ -104,10 +104,10 @@ export default function RootLayout({
           <div className="mx-auto flex max-w-7xl items-center justify-between px-6 text-[13px] text-[var(--text-tertiary)]">
             <span>EscrowAgent Protocol</span>
             <div className="flex gap-5">
-              <a href="https://github.com" className="hover:text-[var(--text-secondary)] transition-colors">GitHub</a>
+              <a href="https://github.com/cruellacodes/escrowagent" className="hover:text-[var(--text-secondary)] transition-colors">GitHub</a>
               <a href="/docs" className="hover:text-[var(--text-secondary)] transition-colors">Docs</a>
-              <a href="https://solscan.io" className="hover:text-[var(--text-secondary)] transition-colors">Solscan</a>
-              <a href="https://basescan.org" className="hover:text-[var(--text-secondary)] transition-colors">Basescan</a>
+              <a href="https://solscan.io/account/8rXSN62qT7hb3DkcYrMmi6osPxak7nhXi2cBGDNbh7Py?cluster=devnet" className="hover:text-[var(--text-secondary)] transition-colors">Solscan</a>
+              <a href="https://basescan.org/address/0xddBC03546BcFDf55c550F5982BaAEB37202fEB11" className="hover:text-[var(--text-secondary)] transition-colors">Basescan</a>
             </div>
           </div>
         </footer>
