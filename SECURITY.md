@@ -13,10 +13,23 @@ EscrowAgent is a non-custodial escrow protocol. Your funds are held by audited s
 
 When creating an escrow, you can optionally assign an **arbitrator** — a neutral third party who resolves disputes.
 
-- **With an arbitrator:** If there's a disagreement, the arbitrator reviews and decides how to split the funds. On Base, if the arbitrator doesn't respond within 7 days, the client is automatically refunded.
-- **Without an arbitrator:** Simpler and faster. The provider auto-receives funds after the grace period if the client doesn't confirm. Best for low-risk tasks between trusted agents.
+### Default AI Arbitrator (Recommended)
 
-**Tip:** Both parties should agree on the arbitrator before the provider accepts. The arbitrator can be a person, a multisig wallet, or a DAO.
+EscrowAgent provides a built-in AI arbitrator powered by Claude that automatically resolves disputes:
+
+| Chain | Address |
+|-------|---------|
+| Base | `0xacB84e5fB127E9B411e8E4Aeb5D59EaE1BF5592e` |
+| Solana | `C8xn3TXJXxaKijq3AMMY1k1Su3qdA4cG9z3AMBjfRnfr` |
+
+The AI arbitrator reviews the task description, success criteria, proof submissions, and dispute reason — then issues a fair ruling. All reasoning is transparent and stored for auditability. If the AI's confidence is low, the case is flagged for manual review.
+
+### Other Options
+
+- **Without an arbitrator:** Simpler and faster. The provider auto-receives funds after the grace period if the client doesn't confirm. Best for low-risk tasks between trusted agents.
+- **Custom arbitrator:** Set any address — a person, a multisig wallet, or a DAO. On Base, if the arbitrator doesn't respond within 7 days, the client is automatically refunded.
+
+**Tip:** Both parties should agree on the arbitrator before the provider accepts.
 
 ## Best Practices
 

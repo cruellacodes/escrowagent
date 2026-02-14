@@ -222,6 +222,48 @@ Add to your Claude Desktop config:
 
 ---
 
+## AI Arbitrator
+
+EscrowAgent includes a built-in **AI-powered arbitrator agent** that automatically resolves disputes using Claude. No human bottleneck.
+
+```
+1. Client raises a dispute
+2. AI Arbitrator gathers evidence (task, proofs, dispute reason)
+3. Claude analyzes and issues a ruling
+4. Ruling is submitted on-chain automatically
+5. Funds are distributed per the ruling
+```
+
+**Default Arbitrator Addresses** (set these when creating escrows):
+
+| Chain | Address |
+|-------|---------|
+| Base | `0xacB84e5fB127E9B411e8E4Aeb5D59EaE1BF5592e` |
+| Solana | `C8xn3TXJXxaKijq3AMMY1k1Su3qdA4cG9z3AMBjfRnfr` |
+
+```typescript
+import { DEFAULT_ARBITRATOR_BASE } from "escrowagent-sdk";
+
+const escrow = await vault.createEscrow({
+  provider: "0x...",
+  arbitrator: DEFAULT_ARBITRATOR_BASE, // AI-powered dispute resolution
+  amount: 50_000_000,
+  // ...
+});
+```
+
+**How the AI decides:**
+- Reviews the task description and success criteria
+- Checks all proof submissions from the provider
+- Reads the dispute reason
+- Rules `PayProvider` if criteria were met, `PayClient` if not, or `Split` for partial completion
+- Only auto-submits if confidence is above 70% — low-confidence cases are flagged for manual review
+- Full reasoning and evidence stored on-chain for auditability
+
+The arbitrator is optional — users can set any address (or none) as the arbitrator.
+
+---
+
 ## Architecture
 
 ```
@@ -252,6 +294,7 @@ Add to your Claude Desktop config:
            │                       │
            │   • Indexer (events)  │
            │   • REST API          │
+           │   • AI Arbitrator     │
            │   • Dashboard (UI)    │
            └───────────────────────┘
 ```
@@ -259,15 +302,16 @@ Add to your Claude Desktop config:
 | Component | Path | Description |
 |-----------|------|-------------|
 | Solana Program | `programs/escrowagent/` | Anchor smart contract — 10 instructions, full escrow lifecycle |
-| Base Contract | `contracts/` | Solidity/Foundry smart contract — same 10 functions, ERC-20 support |
+| Base Contract | `contracts/` | Solidity/Foundry smart contract (UUPS upgradeable) — 53 tests passing |
 | TypeScript SDK | `sdk/typescript/` | `escrowagent-sdk` — multi-chain client (Solana + Base via factory) |
 | Python SDK | `sdk/python/` | `escrowagent-sdk` — multi-chain Python client |
 | Agent Tools | `sdk/agent-tools/` | LangChain, Vercel AI SDK, and MCP adapters |
-| CLI | `sdk/cli/` | `npx escrowagent` — init, mcp, status, info (with `--chain` flag) |
+| CLI | `sdk/cli/` | `npx escrowagent` — init, mcp, skills, status, info |
+| AI Arbitrator | `indexer/src/arbitrator/` | Claude-powered dispute resolution agent |
 | Indexer + API | `indexer/` | Dual-chain event listener + Fastify REST API + PostgreSQL |
-| Dashboard | `dashboard/` | Next.js 15 + Tailwind CSS 4 monitoring UI with chain selector |
+| Dashboard | `dashboard/` | Next.js 15 monitoring UI with analytics, disputes, and chain selector |
 | Solana Tests | `tests/` | Anchor integration tests |
-| Base Tests | `contracts/test/` | Foundry tests (18 passing) |
+| Base Tests | `contracts/test/` | Foundry tests (53 passing) |
 
 ---
 
@@ -392,13 +436,14 @@ ESCROWAGENT_INDEXER_URL=http://localhost:3001
 
 | | |
 |---|---|
-| **Solana Program ID** | `8rXSN62qT7hb3DkcYrMmi6osPxak7nhXi2cBGDNbh7Py` |
-| **Solana Network** | Devnet |
-| **Base Contract** | Deploy with `forge script` (see above) |
-| **Base Network** | Mainnet (8453) / Sepolia (84532) |
-| **npm** | [`escrowagent-sdk`](https://www.npmjs.com/package/escrowagent-sdk) |
-| **PyPI** | [`escrowagent-sdk`](https://pypi.org/project/escrowagent-sdk/) |
-| **GitHub** | [`cruellacodes/escrow-agent`](https://github.com/cruellacodes/escrow-agent) |
+| **Solana Program** | `8rXSN62qT7hb3DkcYrMmi6osPxak7nhXi2cBGDNbh7Py` (Devnet) |
+| **Base Contract** | `0x92508744B0594996ED00aE7AdE534248C7b8A5bd` ([Sepolia](https://sepolia.basescan.org/address/0x92508744b0594996ed00ae7ade534248c7b8a5bd)) |
+| **AI Arbitrator (Base)** | `0xacB84e5fB127E9B411e8E4Aeb5D59EaE1BF5592e` |
+| **AI Arbitrator (Solana)** | `C8xn3TXJXxaKijq3AMMY1k1Su3qdA4cG9z3AMBjfRnfr` |
+| **Dashboard** | [escrowagent.vercel.app](https://escrowagent.vercel.app) |
+| **API** | [escrowagent.onrender.com](https://escrowagent.onrender.com) |
+| **npm** | [`escrowagent-sdk`](https://www.npmjs.com/package/escrowagent-sdk) / [`escrowagent`](https://www.npmjs.com/package/escrowagent) / [`escrowagent-agent-tools`](https://www.npmjs.com/package/escrowagent-agent-tools) |
+| **GitHub** | [`cruellacodes/escrowagent`](https://github.com/cruellacodes/escrowagent) |
 
 ---
 
@@ -425,10 +470,11 @@ cd sdk/python && python -m build && twine upload dist/*
 ## Roadmap
 
 - **Phase 1 (done):** Core escrow, MultiSig + OnChain verification, TS/Python SDKs, AI agent tools, devnet
-- **Phase 2 (now):** Multi-chain support (Solana + Base), Foundry tests, dual-chain indexer, chain selector UI
-- **Phase 3:** Oracle verification, decentralized arbitrator pool, Token-2022, Base mainnet launch
-- **Phase 4:** Escrow templates, batch escrows, agent discovery marketplace
-- **Phase 5:** Agent Router, streaming payments, more EVM chains (Arbitrum, Optimism), governance
+- **Phase 2 (done):** Multi-chain support (Solana + Base), Foundry tests, dual-chain indexer, chain selector UI
+- **Phase 3 (done):** AI Arbitrator agent, security audit (115 issues fixed), UUPS upgradeability, analytics dashboard
+- **Phase 4 (now):** Base mainnet launch, oracle verification, staked arbitrator registry, Token-2022
+- **Phase 5:** Escrow templates, batch escrows, agent discovery marketplace
+- **Phase 6:** Agent Router, streaming payments, more EVM chains (Arbitrum, Optimism), governance
 
 ## Security
 
