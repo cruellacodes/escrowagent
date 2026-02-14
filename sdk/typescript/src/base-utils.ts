@@ -16,6 +16,9 @@ export const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 /** USDC on Base Sepolia */
 export const USDC_BASE_SEPOLIA = "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
 
+/** EscrowAgent Default AI Arbitrator (Base) */
+export const DEFAULT_ARBITRATOR_BASE = "0xacB84e5fB127E9B411e8E4Aeb5D59EaE1BF5592e";
+
 /** Default Base Mainnet RPC */
 export const BASE_MAINNET_RPC = "https://mainnet.base.org";
 

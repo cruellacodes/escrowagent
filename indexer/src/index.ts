@@ -2,6 +2,7 @@ import "dotenv/config";
 import { buildApp } from "./api";
 import { EventListener } from "./listener-solana";
 import { BaseEventListener } from "./listener-base";
+import { ArbitratorAgent } from "./arbitrator";
 import { migrate } from "./db";
 
 // ──────────────────────────────────────────────────────
@@ -63,9 +64,19 @@ async function main() {
     process.exit(1);
   }
 
+  // 5. Start the AI Arbitrator Agent (if configured)
+  let arbitratorAgent: ArbitratorAgent | null = null;
+  if (process.env.ARBITRATOR_ENABLED === "true") {
+    arbitratorAgent = new ArbitratorAgent();
+    arbitratorAgent.start();
+  } else {
+    console.log("[Indexer] Arbitrator agent disabled (ARBITRATOR_ENABLED != true)");
+  }
+
   // Graceful shutdown
   const shutdown = async () => {
     console.log("[Indexer] Shutting down...");
+    if (arbitratorAgent) arbitratorAgent.stop();
     await solanaListener.stop();
     if (baseListener) await baseListener.stop();
     await app.close();

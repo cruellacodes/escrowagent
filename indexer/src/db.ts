@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS proofs (
     verified BOOLEAN DEFAULT FALSE
 );
 
--- Dispute records
+-- Dispute records (with AI arbitrator columns)
 CREATE TABLE IF NOT EXISTS disputes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     escrow_address TEXT REFERENCES escrows(escrow_address),
@@ -78,7 +78,14 @@ CREATE TABLE IF NOT EXISTS disputes (
     ruling VARCHAR(20),
     ruling_details JSONB,
     raised_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    resolved_at TIMESTAMP
+    resolved_at TIMESTAMP,
+    ai_ruling VARCHAR(20),
+    ai_confidence DECIMAL(3,2),
+    ai_reasoning TEXT,
+    ai_prompt TEXT,
+    ai_response TEXT,
+    resolved_on_chain BOOLEAN DEFAULT FALSE,
+    resolution_tx TEXT
 );
 
 -- Agent reputation / stats (materialized view, updated on events)
