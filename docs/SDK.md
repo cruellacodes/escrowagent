@@ -25,7 +25,7 @@ sdk/
 ### Installation
 
 ```bash
-npm install escrowagent-sdk
+npm install escrowagent-sdk@latest
 ```
 
 ### Quick Start
@@ -423,7 +423,7 @@ sdk/python/
 ### Installation
 
 ```bash
-npm install escrowagent-agent-tools escrowagent-sdk
+npm install escrowagent-agent-tools@latest escrowagent-sdk@latest
 ```
 
 ### Supported Frameworks
@@ -546,8 +546,18 @@ sdk/agent-tools/
 ```bash
 npm install -g escrowagent
 # or
-npx escrowagent <command>
+npx escrowagent@latest <command>
 ```
+
+### Agent Skills
+
+Install escrow capabilities directly into your AI coding agent:
+
+```bash
+npx skills add cruellacodes/escrowagent
+```
+
+Works with Cursor, Claude Code, Codex, GitHub Copilot, and [35+ more](https://github.com/vercel-labs/skills).
 
 ### Commands
 
@@ -557,10 +567,10 @@ Initialize EscrowAgent in your project.
 
 ```bash
 # Solana (default)
-npx escrowagent init
+npx escrowagent@latest init
 
 # Base
-npx escrowagent init --chain base
+npx escrowagent@latest init --chain base
 ```
 
 **Creates**:
@@ -573,7 +583,7 @@ npx escrowagent init --chain base
 Start MCP server for Claude/Cursor.
 
 ```bash
-npx escrowagent mcp
+npx escrowagent@latest mcp
 ```
 
 **Environment Variables**:
@@ -586,7 +596,7 @@ npx escrowagent mcp
 Check protocol status.
 
 ```bash
-npx escrowagent status
+npx escrowagent@latest status
 
 # Output:
 # ✓ Solana Program: 8rXSN62... (Devnet)
@@ -599,7 +609,7 @@ npx escrowagent status
 Display protocol info.
 
 ```bash
-npx escrowagent info
+npx escrowagent@latest info
 
 # Output:
 # Solana:
@@ -616,7 +626,7 @@ npx escrowagent info
 Show help.
 
 ```bash
-npx escrowagent help
+npx escrowagent@latest help
 ```
 
 ### Structure

@@ -27,41 +27,43 @@ function printWelcome() {
   console.log(`  ${GREEN}Trustless escrow for AI agent-to-agent transactions${RESET}`);
   console.log(`  ${DIM}Solana (SPL) + Base (ERC-20) — zero trust required${RESET}\n`);
   console.log(`${BOLD}  Get started:${RESET}\n`);
-  console.log(`    ${GREEN}$ npx escrowagent init${RESET}              ${DIM}Scaffold into your project${RESET}`);
-  console.log(`    ${GREEN}$ npx escrowagent mcp${RESET}               ${DIM}Start MCP server (Claude/Cursor)${RESET}`);
-  console.log(`    ${GREEN}$ npx escrowagent skills${RESET}            ${DIM}Browse agent integrations${RESET}`);
+  console.log(`    ${GREEN}$ npx skills add cruellacodes/escrowagent${RESET}  ${DIM}Install skills into your AI agent${RESET}`);
+  console.log(`    ${GREEN}$ npx escrowagent@latest init${RESET}             ${DIM}Scaffold into your project${RESET}`);
+  console.log(`    ${GREEN}$ npx escrowagent@latest mcp${RESET}              ${DIM}Start MCP server (Claude/Cursor)${RESET}`);
   console.log();
-  console.log(`  ${DIM}Run ${WHITE}npx escrowagent help${DIM} for all commands${RESET}`);
+  console.log(`  ${DIM}Run ${WHITE}npx escrowagent@latest help${DIM} for all commands${RESET}`);
   console.log(`  ${DIM}Docs: ${CYAN}https://escrowagent.vercel.app/docs${RESET}`);
   console.log();
 }
 
 function printHelp() {
   console.log(LOGO);
-  console.log(`${BOLD}Usage:${RESET}  npx escrowagent ${CYAN}<command>${RESET} [--chain solana|base]\n`);
+  console.log(`${BOLD}Usage:${RESET}  npx escrowagent@latest ${CYAN}<command>${RESET} [--chain solana|base]\n`);
   console.log(`${BOLD}Commands:${RESET}`);
   console.log(`  ${CYAN}init${RESET}          Scaffold EscrowAgent into your agent project`);
   console.log(`  ${CYAN}mcp${RESET}           Start the MCP server (for Claude, Cursor, etc.)`);
-  console.log(`  ${CYAN}skills${RESET}        Browse available agent integrations`);
   console.log(`  ${CYAN}status${RESET}        Check protocol status on devnet/mainnet`);
   console.log(`  ${CYAN}info${RESET}          Show program IDs and config`);
   console.log(`  ${CYAN}help${RESET}          Show this help message`);
+  console.log();
+  console.log(`${BOLD}Agent Skills:${RESET}`);
+  console.log(`  ${GREEN}$ npx skills add cruellacodes/escrowagent${RESET}  ${DIM}Install into Cursor, Claude Code, Codex, etc.${RESET}`);
   console.log();
   console.log(`${BOLD}Flags:${RESET}`);
   console.log(`  ${CYAN}--chain${RESET}       Chain to use: solana (default) or base`);
   console.log();
   console.log(`${BOLD}Examples:${RESET}`);
-  console.log(`  ${DIM}# Add EscrowAgent escrow skills to your agent${RESET}`);
-  console.log(`  ${GREEN}$ npx escrowagent init${RESET}`);
+  console.log(`  ${DIM}# Install escrow skills into your AI agent${RESET}`);
+  console.log(`  ${GREEN}$ npx skills add cruellacodes/escrowagent${RESET}`);
+  console.log();
+  console.log(`  ${DIM}# Scaffold EscrowAgent into your project${RESET}`);
+  console.log(`  ${GREEN}$ npx escrowagent@latest init${RESET}`);
   console.log();
   console.log(`  ${DIM}# Initialize for Base chain${RESET}`);
-  console.log(`  ${GREEN}$ npx escrowagent init --chain base${RESET}`);
+  console.log(`  ${GREEN}$ npx escrowagent@latest init --chain base${RESET}`);
   console.log();
   console.log(`  ${DIM}# Start MCP server for Claude Desktop${RESET}`);
-  console.log(`  ${GREEN}$ npx escrowagent mcp${RESET}`);
-  console.log();
-  console.log(`  ${DIM}# Browse integrations${RESET}`);
-  console.log(`  ${GREEN}$ npx escrowagent skills${RESET}`);
+  console.log(`  ${GREEN}$ npx escrowagent@latest mcp${RESET}`);
   console.log();
   console.log(`${DIM}Docs: https://escrowagent.vercel.app/docs${RESET}`);
   console.log();
@@ -87,13 +89,13 @@ async function init() {
   const { execSync } = await import("child_process");
 
   try {
-    execSync("npm install escrowagent-sdk @solana/web3.js @solana/spl-token", {
+    execSync("npm install escrowagent-sdk@latest @solana/web3.js @solana/spl-token", {
       cwd,
       stdio: "inherit",
     });
   } catch {
     console.log(`${YELLOW}npm install failed. You can install manually:${RESET}`);
-    console.log(`  npm install escrowagent-sdk @solana/web3.js @solana/spl-token`);
+    console.log(`  npm install escrowagent-sdk@latest @solana/web3.js @solana/spl-token`);
   }
 
   // Create example agent file
@@ -184,18 +186,21 @@ ${BOLD}Next steps:${RESET}
 
 ${BOLD}For AI agent frameworks:${RESET}
 
+  ${DIM}# Install escrow skills into your AI agent${RESET}
+  npx skills add cruellacodes/escrowagent
+
   ${DIM}# LangChain${RESET}
-  npm install escrowagent-agent-tools @langchain/core
+  npm install escrowagent-agent-tools@latest @langchain/core
   ${DIM}import { createLangChainTools } from "escrowagent-agent-tools";${RESET}
 
   ${DIM}# Vercel AI SDK${RESET}
-  npm install escrowagent-agent-tools ai
+  npm install escrowagent-agent-tools@latest ai
   ${DIM}import { createVercelAITools } from "escrowagent-agent-tools";${RESET}
 
   ${DIM}# Claude MCP Server${RESET}
-  npx escrowagent mcp
+  npx escrowagent@latest mcp
 
-${DIM}Docs: https://github.com/cruellacodes/escrow-agent${RESET}
+${DIM}Docs: https://github.com/cruellacodes/escrowagent${RESET}
 `);
 }
 
@@ -229,7 +234,7 @@ async function mcp() {
   "mcpServers": {
     "escrowagent": {
       "command": "npx",
-      "args": ["escrowagent", "mcp"],
+      "args": ["escrowagent@latest", "mcp"],
       "env": {
         "SOLANA_RPC_URL": "https://api.devnet.solana.com",
         "AGENT_PRIVATE_KEY": "[your,keypair,bytes]"
@@ -245,7 +250,7 @@ async function mcp() {
   // const { listen } = createMCPServer(vault);
   // await listen();
 
-  console.error(`${YELLOW}Note: Install escrowagent-agent-tools for full MCP server: npm install escrowagent-agent-tools${RESET}`);
+  console.error(`${YELLOW}Note: Install escrowagent-agent-tools for full MCP server: npm install escrowagent-agent-tools@latest${RESET}`);
 }
 
 async function status() {
@@ -312,86 +317,10 @@ function info() {
   console.log(`    Protocol Fee:  0.5%`);
   console.log(`    Arbitrator Fee: 1.0%`);
   console.log(`    GitHub:        ${CYAN}https://github.com/cruellacodes/escrow-agent${RESET}`);
-  console.log(`    SDK:           npm install escrowagent-sdk`);
-  console.log(`    Agent Tools:   npm install escrowagent-agent-tools`);
+  console.log(`    SDK:           npm install escrowagent-sdk@latest`);
+  console.log(`    Agent Tools:   npm install escrowagent-agent-tools@latest`);
+  console.log(`    Agent Skills:  npx skills add cruellacodes/escrowagent`);
   console.log();
-}
-
-function skills() {
-  console.log(LOGO);
-  console.log(`${BOLD}Available Skills & Integrations${RESET}\n`);
-
-  const integrations = [
-    {
-      name: "LangChain",
-      desc: "Add escrow tools to any LangChain agent (ReAct, OpenAI Functions, etc.)",
-      install: "npm install escrowagent-agent-tools @langchain/core",
-      code: `import { createLangChainTools } from "escrowagent-agent-tools";
-const tools = createLangChainTools(vault);
-const agent = createReactAgent({ llm, tools });`,
-    },
-    {
-      name: "Vercel AI SDK",
-      desc: "Add escrow tools to Vercel AI agents (Next.js, serverless)",
-      install: "npm install escrowagent-agent-tools ai",
-      code: `import { createVercelAITools } from "escrowagent-agent-tools";
-const tools = createVercelAITools(vault);
-const { text } = await generateText({ model, tools, prompt });`,
-    },
-    {
-      name: "MCP (Claude / Cursor)",
-      desc: "Expose escrow tools via Model Context Protocol for Claude Desktop & Cursor",
-      install: "npx escrowagent mcp",
-      code: `// Or programmatically:
-import { createMCPServer } from "escrowagent-agent-tools";
-const { listen } = createMCPServer(vault);
-await listen();`,
-    },
-    {
-      name: "Direct SDK (TypeScript)",
-      desc: "Use the escrow protocol directly in any TypeScript/Node.js project",
-      install: "npm install escrowagent-sdk",
-      code: `import { AgentVault } from "escrowagent-sdk";
-const vault = new AgentVault({ chain: "base", privateKey: "0x...", contractAddress: "0x..." });
-await vault.createEscrow({ provider, amount, tokenMint, deadline, task, verification });`,
-    },
-    {
-      name: "Direct SDK (Python)",
-      desc: "Use the escrow protocol in Python AI agents",
-      install: "pip install escrowagent-sdk[base]",
-      code: `from escrowagent import AgentVault
-vault = AgentVault(chain="base", private_key="0x...", contract_address="0x...")
-await vault.create_escrow(params)`,
-    },
-  ];
-
-  for (const skill of integrations) {
-    console.log(`  ${MAGENTA}${BOLD}${skill.name}${RESET}`);
-    console.log(`  ${DIM}${skill.desc}${RESET}\n`);
-    console.log(`  ${CYAN}$ ${skill.install}${RESET}\n`);
-    console.log(`  ${DIM}${skill.code.split('\n').join(`\n  ${DIM}`)}${RESET}`);
-    console.log();
-    console.log(`  ${"─".repeat(60)}\n`);
-  }
-
-  console.log(`${BOLD}  9 tools available in every integration:${RESET}\n`);
-  const tools = [
-    ["create_escrow",      "Lock funds for a task with deadline + success criteria"],
-    ["accept_escrow",      "Accept a pending task as the provider agent"],
-    ["submit_proof",       "Submit proof of task completion"],
-    ["confirm_completion", "Confirm and release funds to provider"],
-    ["cancel_escrow",      "Cancel before acceptance (full refund)"],
-    ["raise_dispute",      "Freeze funds, escalate to arbitrator"],
-    ["get_escrow",         "Look up escrow details"],
-    ["list_escrows",       "Browse and filter escrows"],
-    ["get_agent_stats",    "Check an agent's reputation and track record"],
-  ];
-
-  for (const [name, desc] of tools) {
-    console.log(`    ${GREEN}${name.padEnd(22)}${RESET}${DIM}${desc}${RESET}`);
-  }
-
-  console.log(`\n  ${DIM}Docs: ${CYAN}https://escrowagent.vercel.app/docs${RESET}\n`);
 }
 
 // ── Route commands ──
@@ -404,7 +333,11 @@ await vault.create_escrow(params)`,
       await mcp();
       break;
     case "skills":
-      skills();
+      console.log(LOGO);
+      console.log(`${BOLD}Install escrow skills into your AI agent:${RESET}\n`);
+      console.log(`  ${GREEN}$ npx skills add cruellacodes/escrowagent${RESET}\n`);
+      console.log(`  ${DIM}Works with Cursor, Claude Code, Codex, GitHub Copilot, and 35+ more.${RESET}`);
+      console.log(`  ${DIM}Learn more: ${CYAN}https://github.com/vercel-labs/skills${RESET}\n`);
       break;
     case "status":
       await status();

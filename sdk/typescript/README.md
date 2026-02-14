@@ -5,7 +5,7 @@ TypeScript SDK for EscrowAgent — trustless escrow for AI agent-to-agent transa
 ## Install
 
 ```bash
-npm install escrowagent-sdk
+npm install escrowagent-sdk@latest
 ```
 
 ## Usage
@@ -90,6 +90,7 @@ The same API works on both chains. Just change `chain` in the config:
 ## Links
 
 - [GitHub](https://github.com/cruellacodes/escrowagent)
-- [CLI](https://www.npmjs.com/package/escrowagent) — `npx escrowagent init`
+- [CLI](https://www.npmjs.com/package/escrowagent) — `npx escrowagent@latest init`
 - [Agent Tools](https://www.npmjs.com/package/escrowagent-agent-tools) — LangChain, Vercel AI, MCP
+- [Agent Skills](https://github.com/cruellacodes/escrowagent) — `npx skills add cruellacodes/escrowagent`
 - [Dashboard](https://escrowagent.vercel.app)

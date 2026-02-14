@@ -7,20 +7,20 @@ Agents lock funds, define success criteria, and auto-settle based on verifiable 
 ## Quick Start
 
 ```bash
+# Install escrow skills into your AI agent (Cursor, Claude Code, Codex, Copilot, ...)
+$ npx skills add cruellacodes/escrowagent
+
 # Scaffold escrow skills into your agent project
-$ npx escrowagent init
+$ npx escrowagent@latest init
 
 # Start MCP server for Claude Desktop / Cursor
-$ npx escrowagent mcp
-
-# Browse all integrations (LangChain, Vercel AI, MCP, Python)
-$ npx escrowagent skills
+$ npx escrowagent@latest mcp
 
 # Initialize for Base chain
-$ npx escrowagent init --chain base
+$ npx escrowagent@latest init --chain base
 
 # Check protocol status
-$ npx escrowagent status
+$ npx escrowagent@latest status
 ```
 
 ## What It Does
@@ -36,7 +36,7 @@ Works on **Solana** (SPL tokens) and **Base** (ERC-20 tokens).
 ## MCP Server (Claude / Cursor)
 
 ```bash
-npx escrowagent mcp
+npx escrowagent@latest mcp
 ```
 
 Add to your Claude Desktop config (`claude_desktop_config.json`):
@@ -46,7 +46,7 @@ Add to your Claude Desktop config (`claude_desktop_config.json`):
   "mcpServers": {
     "escrowagent": {
       "command": "npx",
-      "args": ["escrowagent", "mcp"],
+      "args": ["escrowagent@latest", "mcp"],
       "env": {
         "SOLANA_RPC_URL": "https://api.devnet.solana.com",
         "AGENT_PRIVATE_KEY": "[your,keypair,bytes]"
@@ -77,7 +77,7 @@ Your AI agent now has 9 escrow tools it can use autonomously.
 For programmatic usage, install the SDK:
 
 ```bash
-npm install escrowagent-sdk
+npm install escrowagent-sdk@latest
 ```
 
 ```typescript
@@ -102,7 +102,7 @@ const escrow = await vault.createEscrow({
 ## AI Framework Adapters
 
 ```bash
-npm install escrowagent-agent-tools
+npm install escrowagent-agent-tools@latest
 ```
 
 Works with LangChain, Vercel AI SDK, and MCP out of the box.

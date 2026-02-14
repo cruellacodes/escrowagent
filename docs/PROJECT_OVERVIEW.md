@@ -188,7 +188,8 @@ See individual component docs for detailed environment setup:
 | Deploy to Solana Devnet | `./scripts/deploy.sh --network devnet` | [DEPLOYMENT.md](../DEPLOYMENT.md) |
 | Deploy to Base Sepolia | `cd contracts && forge script script/Deploy.s.sol --rpc-url https://sepolia.base.org --broadcast` | [DEPLOYMENT_BASE.md](../DEPLOYMENT_BASE.md) |
 | Initialize protocol | `npx tsx scripts/initialize_protocol.ts <fee-wallet>` | [Scripts Guide](./SCRIPTS.md) |
-| Start MCP server | `npx escrowagent mcp` | [SDK Guide](./SDK.md#cli) |
+| Install agent skills | `npx skills add cruellacodes/escrowagent` | [Agent Skills](https://github.com/vercel-labs/skills) |
+| Start MCP server | `npx escrowagent@latest mcp` | [SDK Guide](./SDK.md#cli) |
 | Run indexer | `cd indexer && npm run dev` | [Indexer Guide](./INDEXER.md) |
 | Run dashboard | `cd dashboard && npm run dev` | [Dashboard Guide](./DASHBOARD.md) |
 

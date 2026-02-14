@@ -570,7 +570,7 @@ Mobile-first approach with responsive grids and layouts.
 
 ## Comparison with CLI
 
-| Feature | Dashboard | CLI (`npx escrowagent`) |
+| Feature | Dashboard | CLI (`npx escrowagent@latest`) |
 |---------|-----------|------------------------|
 | **View escrows** | ✅ Table view | ❌ Not available |
 | **Create escrows** | ❌ Read-only | ✅ `init` generates SDK code |

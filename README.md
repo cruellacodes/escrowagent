@@ -5,14 +5,14 @@
 Agents escrow funds, define success criteria, and auto-settle based on verifiable outcomes — no trust required. Works on Solana (SPL tokens) and Base (ERC-20 tokens).
 
 ```bash
-# Scaffold escrow skills into your agent
-$ npx escrowagent init
+# Install escrow skills into your AI agent (Cursor, Claude Code, Codex, Copilot, ...)
+$ npx skills add cruellacodes/escrowagent
 
-# Or start the MCP server for Claude / Cursor
-$ npx escrowagent mcp
+# Or scaffold the SDK into your project
+$ npx escrowagent@latest init
 
-# Browse all integrations
-$ npx escrowagent skills
+# Start the MCP server for Claude / Cursor
+$ npx escrowagent@latest mcp
 ```
 
 ---
@@ -53,27 +53,45 @@ Both chains share the same escrow lifecycle, fee structure, and SDK interface. A
 
 ## Quick Start
 
+### Add Escrow Skills to Your Agent
+
+Install escrow capabilities into any AI coding agent (Cursor, Claude Code, Codex, GitHub Copilot, and [35+ more](https://github.com/vercel-labs/skills)):
+
 ```bash
-# Add escrow skills to your agent project
-$ npx escrowagent init
-
-# Start MCP server for Claude Desktop / Cursor
-$ npx escrowagent mcp
-
-# Browse all integrations (LangChain, Vercel AI, MCP, Python)
-$ npx escrowagent skills
-
-# Initialize for Base chain specifically
-$ npx escrowagent init --chain base
-
-# Check protocol status
-$ npx escrowagent status
+$ npx skills add cruellacodes/escrowagent
 ```
 
-### Install the SDK
+### CLI
 
 ```bash
-npm install escrowagent-sdk
+# Scaffold EscrowAgent into your project
+$ npx escrowagent@latest init
+
+# Initialize for Base chain specifically
+$ npx escrowagent@latest init --chain base
+
+# Start MCP server for Claude Desktop / Cursor
+$ npx escrowagent@latest mcp
+
+# Check protocol status
+$ npx escrowagent@latest status
+```
+
+### Install the Packages
+
+```bash
+# Core SDK — multi-chain escrow client (Solana + Base)
+npm install escrowagent-sdk@latest
+
+# Agent tools — LangChain, Vercel AI SDK, and MCP adapters
+npm install escrowagent-agent-tools@latest
+
+# CLI — init, mcp server, status, integrations browser
+npx escrowagent@latest
+
+# Python SDK
+pip install escrowagent-sdk
+pip install escrowagent-sdk[base]   # with Base chain support
 ```
 
 ### Create Your First Escrow (Solana)
@@ -154,16 +172,36 @@ escrow = await vault.create_escrow(params)
 pip install escrowagent-sdk[base]
 ```
 
+> **All npm packages:** [`escrowagent-sdk`](https://www.npmjs.com/package/escrowagent-sdk) · [`escrowagent-agent-tools`](https://www.npmjs.com/package/escrowagent-agent-tools) · [`escrowagent`](https://www.npmjs.com/package/escrowagent) (CLI)
+
 ---
 
 ## AI Agent Tools
 
 EscrowAgent isn't just an SDK — it's a set of **tools that AI agents can autonomously decide to use.** Works identically on Solana and Base.
 
+### Agent Skills (Cursor, Claude Code, Codex, Copilot, ...)
+
+Install escrow capabilities directly into your coding agent via the open [Agent Skills](https://github.com/vercel-labs/skills) ecosystem:
+
+```bash
+# Install to all detected agents
+$ npx skills add cruellacodes/escrowagent
+
+# Install to a specific agent
+$ npx skills add cruellacodes/escrowagent -a cursor
+$ npx skills add cruellacodes/escrowagent -a claude-code
+
+# Preview available skills before installing
+$ npx skills add cruellacodes/escrowagent --list
+```
+
+Your agent learns when and how to use the full escrow protocol — create, accept, prove, release, dispute — on both Solana and Base.
+
 ### LangChain
 
 ```bash
-npm install escrowagent-agent-tools @langchain/core
+npm install escrowagent-agent-tools@latest @langchain/core
 ```
 
 ```typescript
@@ -186,7 +224,7 @@ const { text } = await generateText({ model, tools, prompt });
 ### Claude / MCP
 
 ```bash
-$ npx escrowagent mcp
+$ npx escrowagent@latest mcp
 ```
 
 Add to your Claude Desktop config:
@@ -196,7 +234,7 @@ Add to your Claude Desktop config:
   "mcpServers": {
     "escrowagent": {
       "command": "npx",
-      "args": ["escrowagent", "mcp"],
+      "args": ["escrowagent@latest", "mcp"],
       "env": {
         "SOLANA_RPC_URL": "https://api.devnet.solana.com",
         "AGENT_PRIVATE_KEY": "[your,keypair,bytes]"
@@ -306,7 +344,8 @@ The arbitrator is optional — users can set any address (or none) as the arbitr
 | TypeScript SDK | `sdk/typescript/` | `escrowagent-sdk` — multi-chain client (Solana + Base via factory) |
 | Python SDK | `sdk/python/` | `escrowagent-sdk` — multi-chain Python client |
 | Agent Tools | `sdk/agent-tools/` | LangChain, Vercel AI SDK, and MCP adapters |
-| CLI | `sdk/cli/` | `npx escrowagent` — init, mcp, skills, status, info |
+| CLI | `sdk/cli/` | `npx escrowagent@latest` — init, mcp, status, info |
+| Agent Skill | `skills/escrow-agent/` | `npx skills add cruellacodes/escrowagent` — install into Cursor, Claude Code, Codex, Copilot, etc. |
 | AI Arbitrator | `indexer/src/arbitrator/` | Claude-powered dispute resolution agent |
 | Indexer + API | `indexer/` | Dual-chain event listener + Fastify REST API + PostgreSQL |
 | Dashboard | `dashboard/` | Next.js 15 monitoring UI with analytics, disputes, and chain selector |

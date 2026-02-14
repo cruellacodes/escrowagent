@@ -7,7 +7,13 @@ Works with **LangChain**, **Vercel AI SDK**, and **MCP** (Claude Desktop, Cursor
 ## Install
 
 ```bash
-npm install escrowagent-agent-tools escrowagent-sdk
+npm install escrowagent-agent-tools@latest escrowagent-sdk@latest
+```
+
+Or install escrow skills directly into your AI agent (Cursor, Claude Code, Codex, Copilot, ...):
+
+```bash
+npx skills add cruellacodes/escrowagent
 ```
 
 ## LangChain
@@ -56,7 +62,7 @@ const { listen } = createMCPServer(vault);
 await listen(); // Runs on stdio
 ```
 
-Or use the CLI shortcut: `npx escrowagent mcp`
+Or use the CLI shortcut: `npx escrowagent@latest mcp`
 
 ## Available Tools
 
@@ -76,5 +82,6 @@ Or use the CLI shortcut: `npx escrowagent mcp`
 
 - [GitHub](https://github.com/cruellacodes/escrowagent)
 - [SDK](https://www.npmjs.com/package/escrowagent-sdk)
-- [CLI](https://www.npmjs.com/package/escrowagent) — `npx escrowagent`
+- [CLI](https://www.npmjs.com/package/escrowagent) — `npx escrowagent@latest`
+- [Agent Skills](https://github.com/cruellacodes/escrowagent) — `npx skills add cruellacodes/escrowagent`
 - [Dashboard](https://escrowagent.vercel.app)
