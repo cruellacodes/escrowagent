@@ -109,8 +109,8 @@ export default async function EscrowDetailPage({
               <a
                 href={
                   escrow.chain === "base"
-                    ? `https://sepolia.basescan.org/tx/${escrow.tx_signature}`
-                    : `https://solscan.io/tx/${escrow.tx_signature}?cluster=devnet`
+                    ? `https://${process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet" ? "" : "sepolia."}basescan.org/tx/${escrow.tx_signature}`
+                    : `https://solscan.io/tx/${escrow.tx_signature}${process.env.NEXT_PUBLIC_SOLANA_NETWORK === "mainnet" ? "" : "?cluster=devnet"}`
                 }
                 target="_blank"
                 rel="noopener noreferrer"
