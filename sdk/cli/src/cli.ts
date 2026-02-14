@@ -22,12 +22,27 @@ const chainFlag = args.find(a => a.startsWith("--chain="))?.split("=")[1]
   || (args.includes("--chain") ? args[args.indexOf("--chain") + 1] : undefined);
 const selectedChain = chainFlag === "base" ? "base" : "solana";
 
+function printWelcome() {
+  console.log(LOGO);
+  console.log(`  ${GREEN}Trustless escrow for AI agent-to-agent transactions${RESET}`);
+  console.log(`  ${DIM}Solana (SPL) + Base (ERC-20) — zero trust required${RESET}\n`);
+  console.log(`${BOLD}  Get started:${RESET}\n`);
+  console.log(`    ${GREEN}$ npx escrowagent init${RESET}              ${DIM}Scaffold into your project${RESET}`);
+  console.log(`    ${GREEN}$ npx escrowagent mcp${RESET}               ${DIM}Start MCP server (Claude/Cursor)${RESET}`);
+  console.log(`    ${GREEN}$ npx escrowagent skills${RESET}            ${DIM}Browse agent integrations${RESET}`);
+  console.log();
+  console.log(`  ${DIM}Run ${WHITE}npx escrowagent help${DIM} for all commands${RESET}`);
+  console.log(`  ${DIM}Docs: ${CYAN}https://escrowagent.vercel.app/docs${RESET}`);
+  console.log();
+}
+
 function printHelp() {
   console.log(LOGO);
   console.log(`${BOLD}Usage:${RESET}  npx escrowagent ${CYAN}<command>${RESET} [--chain solana|base]\n`);
   console.log(`${BOLD}Commands:${RESET}`);
   console.log(`  ${CYAN}init${RESET}          Scaffold EscrowAgent into your agent project`);
   console.log(`  ${CYAN}mcp${RESET}           Start the MCP server (for Claude, Cursor, etc.)`);
+  console.log(`  ${CYAN}skills${RESET}        Browse available agent integrations`);
   console.log(`  ${CYAN}status${RESET}        Check protocol status on devnet/mainnet`);
   console.log(`  ${CYAN}info${RESET}          Show program IDs and config`);
   console.log(`  ${CYAN}help${RESET}          Show this help message`);
@@ -45,7 +60,10 @@ function printHelp() {
   console.log(`  ${DIM}# Start MCP server for Claude Desktop${RESET}`);
   console.log(`  ${GREEN}$ npx escrowagent mcp${RESET}`);
   console.log();
-  console.log(`${DIM}Docs: https://github.com/cruellacodes/escrow-agent${RESET}`);
+  console.log(`  ${DIM}# Browse integrations${RESET}`);
+  console.log(`  ${GREEN}$ npx escrowagent skills${RESET}`);
+  console.log();
+  console.log(`${DIM}Docs: https://escrowagent.vercel.app/docs${RESET}`);
   console.log();
 }
 
@@ -299,6 +317,83 @@ function info() {
   console.log();
 }
 
+function skills() {
+  console.log(LOGO);
+  console.log(`${BOLD}Available Skills & Integrations${RESET}\n`);
+
+  const integrations = [
+    {
+      name: "LangChain",
+      desc: "Add escrow tools to any LangChain agent (ReAct, OpenAI Functions, etc.)",
+      install: "npm install escrowagent-agent-tools @langchain/core",
+      code: `import { createLangChainTools } from "escrowagent-agent-tools";
+const tools = createLangChainTools(vault);
+const agent = createReactAgent({ llm, tools });`,
+    },
+    {
+      name: "Vercel AI SDK",
+      desc: "Add escrow tools to Vercel AI agents (Next.js, serverless)",
+      install: "npm install escrowagent-agent-tools ai",
+      code: `import { createVercelAITools } from "escrowagent-agent-tools";
+const tools = createVercelAITools(vault);
+const { text } = await generateText({ model, tools, prompt });`,
+    },
+    {
+      name: "MCP (Claude / Cursor)",
+      desc: "Expose escrow tools via Model Context Protocol for Claude Desktop & Cursor",
+      install: "npx escrowagent mcp",
+      code: `// Or programmatically:
+import { createMCPServer } from "escrowagent-agent-tools";
+const { listen } = createMCPServer(vault);
+await listen();`,
+    },
+    {
+      name: "Direct SDK (TypeScript)",
+      desc: "Use the escrow protocol directly in any TypeScript/Node.js project",
+      install: "npm install escrowagent-sdk",
+      code: `import { AgentVault } from "escrowagent-sdk";
+const vault = new AgentVault({ chain: "base", privateKey: "0x...", contractAddress: "0x..." });
+await vault.createEscrow({ provider, amount, tokenMint, deadline, task, verification });`,
+    },
+    {
+      name: "Direct SDK (Python)",
+      desc: "Use the escrow protocol in Python AI agents",
+      install: "pip install escrowagent-sdk[base]",
+      code: `from escrowagent import AgentVault
+vault = AgentVault(chain="base", private_key="0x...", contract_address="0x...")
+await vault.create_escrow(params)`,
+    },
+  ];
+
+  for (const skill of integrations) {
+    console.log(`  ${MAGENTA}${BOLD}${skill.name}${RESET}`);
+    console.log(`  ${DIM}${skill.desc}${RESET}\n`);
+    console.log(`  ${CYAN}$ ${skill.install}${RESET}\n`);
+    console.log(`  ${DIM}${skill.code.split('\n').join(`\n  ${DIM}`)}${RESET}`);
+    console.log();
+    console.log(`  ${"─".repeat(60)}\n`);
+  }
+
+  console.log(`${BOLD}  9 tools available in every integration:${RESET}\n`);
+  const tools = [
+    ["create_escrow",      "Lock funds for a task with deadline + success criteria"],
+    ["accept_escrow",      "Accept a pending task as the provider agent"],
+    ["submit_proof",       "Submit proof of task completion"],
+    ["confirm_completion", "Confirm and release funds to provider"],
+    ["cancel_escrow",      "Cancel before acceptance (full refund)"],
+    ["raise_dispute",      "Freeze funds, escalate to arbitrator"],
+    ["get_escrow",         "Look up escrow details"],
+    ["list_escrows",       "Browse and filter escrows"],
+    ["get_agent_stats",    "Check an agent's reputation and track record"],
+  ];
+
+  for (const [name, desc] of tools) {
+    console.log(`    ${GREEN}${name.padEnd(22)}${RESET}${DIM}${desc}${RESET}`);
+  }
+
+  console.log(`\n  ${DIM}Docs: ${CYAN}https://escrowagent.vercel.app/docs${RESET}\n`);
+}
+
 // ── Route commands ──
 (async () => {
   switch (command) {
@@ -307,6 +402,9 @@ function info() {
       break;
     case "mcp":
       await mcp();
+      break;
+    case "skills":
+      skills();
       break;
     case "status":
       await status();
@@ -323,7 +421,7 @@ function info() {
       if (command) {
         console.log(`\n${YELLOW}Unknown command: ${command}${RESET}\n`);
       }
-      printHelp();
+      printWelcome();
       break;
   }
 })();

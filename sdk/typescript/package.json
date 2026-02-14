@@ -1,6 +1,6 @@
 {
   "name": "escrowagent-sdk",
-  "version": "0.2.0",
+  "version": "0.3.1",
   "description": "TypeScript SDK for EscrowAgent — escrow & SLA layer for agent-to-agent transactions on Solana and Base",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,17 +10,32 @@
     "prepublishOnly": "npm run build"
   },
   "files": [
-    "dist/"
+    "dist/",
+    "README.md"
   ],
   "keywords": [
+    "escrow",
+    "ai-agents",
+    "autonomous-agents",
     "solana",
     "base",
-    "escrow",
-    "agents",
-    "sla",
+    "ethereum",
+    "agent-to-agent",
+    "smart-contract",
+    "defi",
     "web3",
-    "evm"
+    "evm",
+    "sla",
+    "trustless",
+    "payments",
+    "viem",
+    "anchor"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cruellacodes/escrowagent"
+  },
+  "homepage": "https://escrowagent.vercel.app",
   "license": "MIT",
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",

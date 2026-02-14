@@ -1,6 +1,6 @@
 {
   "name": "escrowagent-agent-tools",
-  "version": "0.1.0",
+  "version": "0.3.1",
   "description": "EscrowAgent tools for AI agent frameworks — LangChain, Vercel AI SDK, and MCP",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -9,30 +9,63 @@
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run build"
   },
-  "files": ["dist/"],
-  "keywords": ["solana", "escrow", "agents", "langchain", "ai-sdk", "mcp", "tools"],
+  "files": [
+    "dist/",
+    "README.md"
+  ],
+  "keywords": [
+    "escrow",
+    "ai-agents",
+    "langchain",
+    "vercel-ai",
+    "mcp",
+    "model-context-protocol",
+    "claude",
+    "cursor",
+    "openai",
+    "function-calling",
+    "tools",
+    "agent-tools",
+    "solana",
+    "base",
+    "ethereum",
+    "autonomous-agents",
+    "smart-contract",
+    "web3"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cruellacodes/escrowagent"
+  },
+  "homepage": "https://escrowagent.vercel.app",
   "license": "MIT",
   "dependencies": {
-    "escrowagent-sdk": "file:../typescript",
     "@coral-xyz/anchor": "^0.32.1",
-    "@solana/web3.js": "^1.95.0",
     "@solana/spl-token": "^0.4.9",
+    "@solana/web3.js": "^1.95.0",
+    "escrowagent-sdk": "^0.3.0",
     "zod": "^3.23.0"
   },
   "peerDependencies": {
     "@langchain/core": ">=0.3.0",
-    "ai": ">=4.0.0",
-    "@modelcontextprotocol/sdk": ">=1.0.0"
+    "@modelcontextprotocol/sdk": ">=1.0.0",
+    "ai": ">=4.0.0"
   },
   "peerDependenciesMeta": {
-    "@langchain/core": { "optional": true },
-    "ai": { "optional": true },
-    "@modelcontextprotocol/sdk": { "optional": true }
+    "@langchain/core": {
+      "optional": true
+    },
+    "ai": {
+      "optional": true
+    },
+    "@modelcontextprotocol/sdk": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@langchain/core": "^0.3.0",
-    "ai": "^4.0.0",
     "@modelcontextprotocol/sdk": "^1.0.0",
+    "ai": "^4.0.0",
     "typescript": "^5.0.0"
   }
 }

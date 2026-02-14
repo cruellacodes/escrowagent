@@ -1,7 +1,7 @@
 {
   "name": "escrowagent",
-  "version": "0.1.0",
-  "description": "EscrowAgent CLI — trustless escrow for autonomous AI agents on Solana",
+  "version": "0.3.2",
+  "description": "Trustless escrow for AI agent-to-agent transactions on Solana and Base. CLI + MCP server for Claude, Cursor, and LangChain agents.",
   "bin": {
     "escrowagent": "./dist/cli.js"
   },
@@ -9,9 +9,38 @@
     "build": "tsc",
     "prepublishOnly": "npm run build"
   },
-  "files": ["dist/", "templates/"],
-  "keywords": ["solana", "escrow", "agents", "ai-agents", "mcp", "langchain", "skills"],
+  "files": [
+    "dist/",
+    "templates/",
+    "README.md"
+  ],
+  "keywords": [
+    "escrow",
+    "ai-agents",
+    "autonomous-agents",
+    "solana",
+    "base",
+    "ethereum",
+    "mcp",
+    "model-context-protocol",
+    "claude",
+    "cursor",
+    "langchain",
+    "vercel-ai",
+    "agent-to-agent",
+    "smart-contract",
+    "defi",
+    "web3",
+    "trustless",
+    "payments",
+    "sla"
+  ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cruellacodes/escrowagent"
+  },
+  "homepage": "https://escrowagent.vercel.app",
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",
     "@solana/web3.js": "^1.95.0",

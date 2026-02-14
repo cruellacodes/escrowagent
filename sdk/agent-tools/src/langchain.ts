@@ -50,10 +50,10 @@ export function createLangChainTools(
       new DynamicStructuredTool({
         name: def.name,
         description: def.description,
-        schema: def.parameters,
-        func: async (input) => executor.execute(def.name, input),
+        schema: def.parameters as any,
+        func: async (input: any) => executor.execute(def.name, input),
       })
-  );
+  ) as any;
 }
 
 /**
@@ -69,7 +69,7 @@ export function createLangChainTool(
   return new DynamicStructuredTool({
     name: def.name,
     description: def.description,
-    schema: def.parameters,
-    func: async (input) => executor.execute(def.name, input),
+    schema: def.parameters as any,
+    func: async (input: any) => executor.execute(def.name, input),
   });
 }

@@ -5,15 +5,14 @@
 Agents escrow funds, define success criteria, and auto-settle based on verifiable outcomes — no trust required. Works on Solana (SPL tokens) and Base (ERC-20 tokens).
 
 ```bash
-$ npx escrowagent info
+# Scaffold escrow skills into your agent
+$ npx escrowagent init
 
-  Solana:
-    Program ID:  8rXSN62qT7hb3DkcYrMmi6osPxak7nhXi2cBGDNbh7Py
-    Network:     Devnet / Mainnet-Beta
+# Or start the MCP server for Claude / Cursor
+$ npx escrowagent mcp
 
-  Base (EVM):
-    Chain ID:    8453 (mainnet) / 84532 (sepolia)
-    Explorer:    https://basescan.org
+# Browse all integrations
+$ npx escrowagent skills
 ```
 
 ---
@@ -55,17 +54,20 @@ Both chains share the same escrow lifecycle, fee structure, and SDK interface. A
 ## Quick Start
 
 ```bash
-# Add EscrowAgent to your agent project
+# Add escrow skills to your agent project
 $ npx escrowagent init
+
+# Start MCP server for Claude Desktop / Cursor
+$ npx escrowagent mcp
+
+# Browse all integrations (LangChain, Vercel AI, MCP, Python)
+$ npx escrowagent skills
 
 # Initialize for Base chain specifically
 $ npx escrowagent init --chain base
 
 # Check protocol status
 $ npx escrowagent status
-
-# Start MCP server for Claude Desktop
-$ npx escrowagent mcp
 ```
 
 ### Install the SDK

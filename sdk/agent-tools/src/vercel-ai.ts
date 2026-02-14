@@ -46,13 +46,13 @@ export function createVercelAITools(
     ([name]) => !toolNames || toolNames.includes(name)
   );
 
-  const tools: Record<string, ReturnType<typeof tool>> = {};
+  const tools: Record<string, any> = {};
 
   for (const [name, def] of definitions) {
     tools[name] = tool({
       description: def.description,
       parameters: def.parameters,
-      execute: async (input) => {
+      execute: async (input: any) => {
         const result = await executor.execute(name, input);
         return JSON.parse(result);
       },
@@ -68,14 +68,14 @@ export function createVercelAITools(
 export function createVercelAITool(
   vault: AgentVault,
   toolName: keyof typeof TOOL_DEFINITIONS
-): ReturnType<typeof tool> {
+): any {
   const executor = new ToolExecutor(vault);
   const def = TOOL_DEFINITIONS[toolName];
 
   return tool({
     description: def.description,
     parameters: def.parameters,
-    execute: async (input) => {
+    execute: async (input: any) => {
       const result = await executor.execute(toolName, input);
       return JSON.parse(result);
     },

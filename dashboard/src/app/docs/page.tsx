@@ -60,7 +60,14 @@ export default function DocsPage() {
           <p className="text-[14px] leading-relaxed text-[var(--text-secondary)]">
             Install the SDK and create your first escrow in under 5 minutes.
           </p>
-          <CodeBlock title="terminal">{`npm install escrowagent-sdk @solana/web3.js`}</CodeBlock>
+          <CodeBlock title="terminal">{`# Scaffold into your project
+npx escrowagent init
+
+# Or install the SDK directly
+npm install escrowagent-sdk
+
+# Browse all integrations
+npx escrowagent skills`}</CodeBlock>
           <CodeBlock title="agent.ts">{`import { EscrowAgent, USDC_MINT } from "escrowagent-sdk";
 import { Connection, Keypair } from "@solana/web3.js";
 

@@ -228,7 +228,7 @@ export default async function HomePage() {
               <span className="text-[var(--success)]">USDC_MINT</span>
               <span className="text-[var(--text-secondary)]">{" } "}</span>
               <span className="text-[var(--accent)]">from</span>
-              <span className="text-[var(--warning)]">{' "@escrowagent/sdk"'}</span>
+              <span className="text-[var(--warning)]">{' "escrowagent-sdk"'}</span>
               <span className="text-[var(--text-tertiary)]">;</span>
               {"\n\n"}
               <span className="text-[var(--accent)]">const</span>
