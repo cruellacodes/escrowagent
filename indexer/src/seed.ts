@@ -26,28 +26,31 @@ const AGENTS = [
   "0xE2f3A4b5C6d7E8f9A0b1C2d3E4f5A6b7C8d9E0f",
 ];
 
-// Task descriptions for realistic escrow scenarios
+// Task descriptions — mostly betting/prediction market scenarios
 const TASKS = [
+  // Betting / Prediction (15)
+  { desc: "Bet: ETH price above $3,000 by end of week", criteria: ["Check Chainlink ETH/USD feed at deadline", "Price must close above $3,000"] },
+  { desc: "Bet: Lakers win tonight vs Celtics — agent vs agent wager", criteria: ["Verify final score via ESPN oracle", "Winner takes escrowed funds"] },
+  { desc: "Prediction: BTC dominance above 55% by Feb 28", criteria: ["Check CoinGecko dominance at deadline", "Must be ≥55.0%"] },
+  { desc: "Bet: SOL flips $200 before end of month", criteria: ["Chainlink SOL/USD feed verification", "Any intraday touch counts"] },
+  { desc: "Wager: Super Bowl LVIII total score over 48.5 points", criteria: ["Verify final score via sports oracle", "Combined score > 48.5"] },
+  { desc: "Prediction: Fed holds rates at next FOMC meeting", criteria: ["Verify Fed announcement via news oracle", "No rate change = win"] },
+  { desc: "Bet: Base daily transactions exceed 5M by March 1", criteria: ["Check BaseScan daily tx count", "Must exceed 5,000,000"] },
+  { desc: "Wager: ETH gas stays below 20 gwei average for 7 days", criteria: ["Track average gas via Etherscan API", "7-day avg < 20 gwei"] },
+  { desc: "Bet: Trump wins 2026 midterm prediction market on Polymarket", criteria: ["Verify Polymarket resolution", "Settlement matches outcome"] },
+  { desc: "Prediction: Gold price above $2,800/oz by end of Q1", criteria: ["Check gold spot price at deadline", "Must close above $2,800"] },
+  { desc: "Bet: Arsenal finishes top 2 in Premier League 2025-26", criteria: ["Verify final league standings", "Arsenal in position 1 or 2"] },
+  { desc: "Wager: Next Ethereum upgrade ships before April 2026", criteria: ["Verify mainnet activation date", "Must activate before April 1"] },
+  { desc: "Bet: AI agent completes 10 trades profitably in 24h", criteria: ["All 10 trades must show positive P&L", "Verify via on-chain tx history"] },
+  { desc: "Prediction: USDC market cap exceeds $50B by March", criteria: ["Check CoinGecko USDC market cap", "Must exceed $50B"] },
+  { desc: "Bet: OpenAI releases GPT-5 before March 2026", criteria: ["Verify official OpenAI announcement", "Public release, not preview"] },
+
+  // Non-betting (5)
   { desc: "Swap 500 USDC to ETH at best DEX rate on Base", criteria: ["Execute within 2% slippage", "Return tx hash"] },
   { desc: "Deploy and verify ERC-20 token contract on Base", criteria: ["Contract verified on BaseScan", "Ownership transferred"] },
-  { desc: "Bridge 1000 USDC from Ethereum to Base via official bridge", criteria: ["Funds arrive within 10 minutes", "Provide bridge tx hash"] },
   { desc: "Set up Uniswap V3 liquidity position ETH/USDC", criteria: ["Position created in ±5% range", "Provide position NFT ID"] },
-  { desc: "Execute limit order: buy ETH below $2,400", criteria: ["Order filled at target price", "Return fill tx"] },
-  { desc: "Audit smart contract for reentrancy vulnerabilities", criteria: ["Detailed report delivered", "All critical issues listed"] },
-  { desc: "Create Merkle distributor for 50 airdrop recipients", criteria: ["Contract deployed and verified", "Root hash verified"] },
   { desc: "Automate daily DCA: buy $50 ETH every 24h for 7 days", criteria: ["7 successful purchases", "Average price within market range"] },
-  { desc: "Monitor and execute arbitrage between Aerodrome and Uniswap", criteria: ["Minimum 0.5% profit per trade", "Execute 5 trades"] },
-  { desc: "Set up multisig wallet with 2-of-3 threshold on Base", criteria: ["Safe deployed", "All signers added", "Test tx executed"] },
-  { desc: "Integrate Chainlink price feed into existing DeFi protocol", criteria: ["Feed integrated and tested", "Price accuracy verified"] },
-  { desc: "Build and deploy subgraph for NFT marketplace events", criteria: ["Subgraph synced", "All events indexed correctly"] },
   { desc: "Execute token buyback: purchase $2,000 worth of project token", criteria: ["Purchased at TWAP", "Tokens sent to burn address"] },
-  { desc: "Create yield optimization strategy for USDC on Aave Base", criteria: ["Strategy deployed", "APY above 3%"] },
-  { desc: "Automate gas-optimized batch transfers to 25 wallets", criteria: ["All transfers confirmed", "Gas savings > 30%"] },
-  { desc: "Deploy cross-chain messaging contract via LayerZero", criteria: ["Contract verified on Base", "Test message sent successfully"] },
-  { desc: "Set up automated liquidation bot for lending protocol", criteria: ["Bot running", "Successfully liquidated test position"] },
-  { desc: "Index and aggregate on-chain governance votes", criteria: ["All proposals indexed", "Vote tallies accurate"] },
-  { desc: "Create bonding curve contract for fair token launch", criteria: ["Curve parameters tested", "Contract verified on BaseScan"] },
-  { desc: "Optimize gas usage in existing NFT minting contract", criteria: ["Gas reduced by >20%", "All tests passing"] },
 ];
 
 // ── Helpers ──
@@ -124,7 +127,17 @@ async function seed() {
   console.log("Running migration first...");
   await migrate();
 
-  console.log(`\nSeeding ${SEED_ESCROWS.length} Base escrows...`);
+  // Clean up previous seed data (escrow IDs 1001–1020)
+  console.log("\nCleaning previous seed data (escrows 1001–1020)...");
+  const seedIds = SEED_ESCROWS.map((e) => e.escrow_address);
+  await query(`DELETE FROM proofs WHERE escrow_address = ANY($1)`, [seedIds]);
+  await query(`DELETE FROM disputes WHERE escrow_address = ANY($1)`, [seedIds]);
+  await query(`DELETE FROM escrows WHERE escrow_address = ANY($1) AND chain = 'base'`, [seedIds]);
+  // Clean seed agent_stats (will be re-created below)
+  const allAgentAddrs = [...new Set([...SEED_ESCROWS.map((e) => e.client), ...SEED_ESCROWS.map((e) => e.provider)])];
+  await query(`DELETE FROM agent_stats WHERE agent_address = ANY($1)`, [allAgentAddrs]);
+
+  console.log(`Seeding ${SEED_ESCROWS.length} Base escrows...`);
 
   for (const e of SEED_ESCROWS) {
     const task = TASKS[e.taskIdx];
