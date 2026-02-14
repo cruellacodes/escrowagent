@@ -144,7 +144,7 @@ async function seed() {
     const createdAt = lastNight();
     const deadline = new Date(createdAt.getTime() + 7 * 24 * 60 * 60 * 1000); // +7 days
     const completedAt = e.completed ? lastNight() : null;
-    const fakeTx = `0x${fakeHash(`tx-${e.escrow_address}`)}`;
+    const fakeTx = `0xSEED${fakeHash(`tx-${e.escrow_address}`).slice(4)}`;
 
     // Insert task
     await query(

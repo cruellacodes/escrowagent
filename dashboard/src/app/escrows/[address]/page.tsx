@@ -105,7 +105,7 @@ export default async function EscrowDetailPage({
             <span className={`badge ${statusBadge(escrow.status)}`}>
               {escrow.status}
             </span>
-            {escrow.tx_signature && (
+            {escrow.tx_signature && !escrow.tx_signature.startsWith("0xSEED") && (
               <a
                 href={
                   escrow.chain === "base"
