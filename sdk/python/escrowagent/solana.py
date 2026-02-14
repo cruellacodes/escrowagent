@@ -218,8 +218,8 @@ class AgentVault:
         program = await self._get_program()
         config_pda, _ = _derive_config_pda(self.program_id)
         config = await program.account["ProtocolConfig"].fetch(config_pda)
-        fee_wallet = config.fee_wallet
-        return fee_wallet if isinstance(fee_wallet, Pubkey) else Pubkey.from_string(str(fee_wallet))
+        fee_authority = config.feeAuthority
+        return fee_authority if isinstance(fee_authority, Pubkey) else Pubkey.from_string(str(fee_authority))
 
     def _parse_escrow_account(self, address: str, data) -> EscrowInfo:
         """Parse raw escrow account data into EscrowInfo."""
@@ -418,6 +418,9 @@ class AgentVault:
         provider_token_account = _get_associated_token_address(
             provider_pk, token_mint_pk
         )
+        client_token_account = _get_associated_token_address(
+            self.pubkey, token_mint_pk
+        )
         protocol_fee_account = await self._get_protocol_fee_account()
 
         sig = await program.rpc["confirm_completion"](
@@ -428,6 +431,7 @@ class AgentVault:
                     "escrow": escrow_pk,
                     "escrow_vault": vault_pda,
                     "escrow_vault_authority": vault_authority_pda,
+                    "client_token_account": client_token_account,
                     "provider_token_account": provider_token_account,
                     "protocol_fee_account": protocol_fee_account,
                     "token_program": TOKEN_PROGRAM_ID,
@@ -635,12 +639,96 @@ class AgentVault:
         return result[offset : offset + limit]
 
     async def expire_escrow(self, escrow_address: str) -> str:
-        """Not implemented on Solana — use Base chain for this action."""
-        raise NotImplementedError("expire_escrow is not supported on Solana")
+        """Expire an escrow after deadline + grace period. Anyone can call."""
+        escrow_pk = Pubkey.from_string(escrow_address)
+        vault_pda, _ = _derive_vault_pda(escrow_pk, self.program_id)
+        vault_authority_pda, _ = _derive_vault_authority_pda(
+            escrow_pk, self.program_id
+        )
+        config_pda, _ = _derive_config_pda(self.program_id)
+
+        program = await self._get_program()
+        escrow_data = await program.account["Escrow"].fetch(escrow_pk)
+
+        client_pk = (
+            escrow_data.client
+            if isinstance(escrow_data.client, Pubkey)
+            else Pubkey.from_string(str(escrow_data.client))
+        )
+        token_mint_pk = (
+            escrow_data.token_mint
+            if isinstance(escrow_data.token_mint, Pubkey)
+            else Pubkey.from_string(str(escrow_data.token_mint))
+        )
+        client_token_account = _get_associated_token_address(
+            client_pk, token_mint_pk
+        )
+
+        sig = await program.rpc["expire_escrow"](
+            ctx=Context(
+                accounts={
+                    "caller": self.pubkey,
+                    "config": config_pda,
+                    "escrow": escrow_pk,
+                    "escrow_vault": vault_pda,
+                    "escrow_vault_authority": vault_authority_pda,
+                    "client_token_account": client_token_account,
+                    "client": client_pk,
+                    "token_program": TOKEN_PROGRAM_ID,
+                },
+                signers=[self.keypair],
+            ),
+        )
+        return str(sig)
 
     async def provider_release(self, escrow_address: str) -> str:
-        """Not implemented on Solana — use Base chain for this action."""
-        raise NotImplementedError("provider_release is not supported on Solana")
+        """Provider voluntarily releases funds back to client."""
+        escrow_pk = Pubkey.from_string(escrow_address)
+        vault_pda, _ = _derive_vault_pda(escrow_pk, self.program_id)
+        vault_authority_pda, _ = _derive_vault_authority_pda(
+            escrow_pk, self.program_id
+        )
+        config_pda, _ = _derive_config_pda(self.program_id)
+
+        program = await self._get_program()
+        escrow_data = await program.account["Escrow"].fetch(escrow_pk)
+
+        client_pk = (
+            escrow_data.client
+            if isinstance(escrow_data.client, Pubkey)
+            else Pubkey.from_string(str(escrow_data.client))
+        )
+        token_mint_pk = (
+            escrow_data.token_mint
+            if isinstance(escrow_data.token_mint, Pubkey)
+            else Pubkey.from_string(str(escrow_data.token_mint))
+        )
+        provider_token_account = _get_associated_token_address(
+            self.pubkey, token_mint_pk
+        )
+        client_token_account = _get_associated_token_address(
+            client_pk, token_mint_pk
+        )
+        protocol_fee_account = await self._get_protocol_fee_account()
+
+        sig = await program.rpc["provider_release"](
+            ctx=Context(
+                accounts={
+                    "provider": self.pubkey,
+                    "config": config_pda,
+                    "escrow": escrow_pk,
+                    "escrow_vault": vault_pda,
+                    "escrow_vault_authority": vault_authority_pda,
+                    "provider_token_account": provider_token_account,
+                    "client_token_account": client_token_account,
+                    "protocol_fee_account": protocol_fee_account,
+                    "client": client_pk,
+                    "token_program": TOKEN_PROGRAM_ID,
+                },
+                signers=[self.keypair],
+            ),
+        )
+        return str(sig)
 
     async def expire_dispute(self, escrow_address: str) -> str:
         """Not implemented on Solana — use Base chain for this action."""

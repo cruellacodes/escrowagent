@@ -204,6 +204,11 @@ export class SolanaEscrowClient implements IEscrowClient {
       escrowData.provider
     );
 
+    const clientTokenAccount = await getAssociatedTokenAddress(
+      escrowData.tokenMint,
+      this.wallet.publicKey
+    );
+
     return program.methods
       .confirmCompletion()
       .accounts({
@@ -212,6 +217,7 @@ export class SolanaEscrowClient implements IEscrowClient {
         config: configPDA,
         escrowVault: vaultPDA,
         escrowVaultAuthority: vaultAuthorityPDA,
+        clientTokenAccount,
         providerTokenAccount,
         protocolFeeAccount: this.protocolFeeAccount,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -360,12 +366,76 @@ export class SolanaEscrowClient implements IEscrowClient {
   // EXPIRY & PROVIDER RELEASE
   // ──────────────────────────────────────────────────────
 
-  async expireEscrow(_escrowAddress: string): Promise<string> {
-    throw new Error("Not yet implemented for Solana");
+  async expireEscrow(escrowAddress: string): Promise<string> {
+    const escrowPubkey = new PublicKey(escrowAddress);
+    const [vaultPDA] = deriveVaultPDA(escrowPubkey, this.programId);
+    const [vaultAuthorityPDA] = deriveVaultAuthorityPDA(
+      escrowPubkey,
+      this.programId
+    );
+
+    const program = await this.getProgram();
+    const [configPDA] = deriveProtocolConfigPDA(this.programId);
+    const escrowData = await program.account.escrow.fetch(escrowPubkey);
+
+    const clientTokenAccount = await getAssociatedTokenAddress(
+      escrowData.tokenMint,
+      escrowData.client
+    );
+
+    return program.methods
+      .expireEscrow()
+      .accounts({
+        caller: this.wallet.publicKey,
+        config: configPDA,
+        escrow: escrowPubkey,
+        escrowVault: vaultPDA,
+        escrowVaultAuthority: vaultAuthorityPDA,
+        clientTokenAccount,
+        client: escrowData.client,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .signers([this.wallet])
+      .rpc();
   }
 
-  async providerRelease(_escrowAddress: string): Promise<string> {
-    throw new Error("Not yet implemented for Solana");
+  async providerRelease(escrowAddress: string): Promise<string> {
+    const escrowPubkey = new PublicKey(escrowAddress);
+    const [vaultPDA] = deriveVaultPDA(escrowPubkey, this.programId);
+    const [vaultAuthorityPDA] = deriveVaultAuthorityPDA(
+      escrowPubkey,
+      this.programId
+    );
+
+    const program = await this.getProgram();
+    const [configPDA] = deriveProtocolConfigPDA(this.programId);
+    const escrowData = await program.account.escrow.fetch(escrowPubkey);
+
+    const providerTokenAccount = await getAssociatedTokenAddress(
+      escrowData.tokenMint,
+      this.wallet.publicKey
+    );
+    const clientTokenAccount = await getAssociatedTokenAddress(
+      escrowData.tokenMint,
+      escrowData.client
+    );
+
+    return program.methods
+      .providerRelease()
+      .accounts({
+        provider: this.wallet.publicKey,
+        config: configPDA,
+        escrow: escrowPubkey,
+        escrowVault: vaultPDA,
+        escrowVaultAuthority: vaultAuthorityPDA,
+        providerTokenAccount,
+        clientTokenAccount,
+        protocolFeeAccount: this.protocolFeeAccount,
+        client: escrowData.client,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .signers([this.wallet])
+      .rpc();
   }
 
   async expireDispute(_escrowAddress: string): Promise<string> {

@@ -11,6 +11,9 @@ escrowagent = "8rXSN62qT7hb3DkcYrMmi6osPxak7nhXi2cBGDNbh7Py"
 [programs.devnet]
 escrowagent = "8rXSN62qT7hb3DkcYrMmi6osPxak7nhXi2cBGDNbh7Py"
 
+[programs.mainnet]
+escrowagent = "8rXSN62qT7hb3DkcYrMmi6osPxak7nhXi2cBGDNbh7Py"
+
 [registry]
 url = "https://api.apr.dev"
 
