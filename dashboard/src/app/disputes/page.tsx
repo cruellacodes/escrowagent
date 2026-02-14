@@ -66,30 +66,28 @@ export default async function DisputesPage() {
             const dispute = disputes[0];
 
             return (
-              <div key={escrow.escrow_address} className="glass glow-subtle rounded-2xl p-6 space-y-4">
+              <div key={escrow.escrow_address} className="glass glow-subtle rounded-2xl p-4 space-y-4 sm:p-6">
                 {/* Header */}
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="flex items-center gap-3">
-                      <a
-                        href={`/escrows/${escrow.escrow_address}`}
-                        className="text-[16px] font-bold text-white hover:text-[var(--accent)]"
-                      >
-                        Escrow #{escrow.escrow_address}
-                      </a>
-                      <span className={`badge ${escrow.status === "Disputed" ? "badge-disputed" : "badge-resolved"}`}>
-                        {escrow.status}
+                <div>
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <a
+                      href={`/escrows/${escrow.escrow_address}`}
+                      className="text-[14px] font-bold text-white hover:text-[var(--accent)] sm:text-[16px]"
+                    >
+                      Escrow #{escrow.escrow_address}
+                    </a>
+                    <span className={`badge ${escrow.status === "Disputed" ? "badge-disputed" : "badge-resolved"}`}>
+                      {escrow.status}
+                    </span>
+                    {escrow.chain && (
+                      <span className="rounded-full bg-blue-400/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-blue-400">
+                        {escrow.chain}
                       </span>
-                      {escrow.chain && (
-                        <span className="rounded-full bg-blue-400/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-blue-400">
-                          {escrow.chain}
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-1 text-[13px] text-[var(--text-tertiary)]">
-                      {formatAmount(escrow.amount)} USDC &middot; {shortenAddress(escrow.client_address, 6)} vs {shortenAddress(escrow.provider_address, 6)}
-                    </p>
+                    )}
                   </div>
+                  <p className="mt-1.5 text-[12px] text-[var(--text-tertiary)] sm:text-[13px]">
+                    {formatAmount(escrow.amount)} USDC &middot; {shortenAddress(escrow.client_address, 4)} vs {shortenAddress(escrow.provider_address, 4)}
+                  </p>
                 </div>
 
                 {/* Dispute Details */}

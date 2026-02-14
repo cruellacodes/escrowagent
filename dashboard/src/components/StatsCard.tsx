@@ -30,7 +30,7 @@ export function StatsCard({
           {icon}
         </div>
       </div>
-      <p className="mt-3 text-[32px] font-bold tracking-tight text-white leading-none">
+      <p className="mt-3 text-[24px] font-bold tracking-tight text-white leading-none sm:text-[32px]">
         {value}
       </p>
       <div className="mt-2 flex items-center gap-2">

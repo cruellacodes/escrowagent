@@ -50,66 +50,100 @@ export function EscrowTable({ escrows }: EscrowTableProps) {
 
   return (
     <div className="glass glow-subtle animate-fade-up overflow-hidden rounded-2xl">
-      <table className="w-full text-[13px]">
-        <thead>
-          <tr className="border-b border-[var(--border)] text-left text-[11px] uppercase tracking-wider text-[var(--text-tertiary)]">
-            <th className="px-5 py-3.5 font-semibold">Escrow</th>
-            <th className="px-5 py-3.5 font-semibold">Client</th>
-            <th className="px-5 py-3.5 font-semibold">Provider</th>
-            <th className="px-5 py-3.5 font-semibold text-right">Amount</th>
-            <th className="px-5 py-3.5 font-semibold">Status</th>
-            <th className="px-5 py-3.5 font-semibold text-right">Deadline</th>
-          </tr>
-        </thead>
-        <tbody>
-          {escrows.map((escrow, i) => (
-            <tr
-              key={escrow.escrow_address}
-              className="group border-b border-[var(--border)] last:border-b-0 transition-colors hover:bg-[var(--surface-hover)] cursor-pointer"
-            >
-              <td className="px-5 py-4">
-                <a
-                  href={`/escrows/${escrow.escrow_address}`}
-                  className="font-mono text-[12px] font-medium text-[var(--accent)] transition-colors hover:text-[var(--accent)] group-hover:underline underline-offset-2"
-                >
+      {/* Mobile card view */}
+      <div className="divide-y divide-[var(--border)] sm:hidden">
+        {escrows.map((escrow) => (
+          <a
+            key={escrow.escrow_address}
+            href={`/escrows/${escrow.escrow_address}`}
+            className="flex items-center justify-between gap-3 px-4 py-4 transition-colors hover:bg-[var(--surface-hover)]"
+          >
+            <div className="min-w-0 space-y-1.5">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-[12px] font-medium text-[var(--accent)]">
                   {shortenAddress(escrow.escrow_address, 6)}
-                </a>
-              </td>
-              <td className="px-5 py-4">
-                <span className="font-mono text-[12px] text-[var(--text-secondary)]">
-                  {shortenAddress(escrow.client_address)}
                 </span>
-              </td>
-              <td className="px-5 py-4">
-                <span className="font-mono text-[12px] text-[var(--text-secondary)]">
-                  {shortenAddress(escrow.provider_address)}
-                </span>
-              </td>
-              <td className="px-5 py-4 text-right">
-                <span className="font-mono text-[13px] font-medium text-white">
-                  {formatAmount(escrow.amount)}
-                </span>
-                <span className="ml-1 text-[11px] text-[var(--text-tertiary)]">
-                  USDC
-                </span>
-              </td>
-              <td className="px-5 py-4">
                 <span className={`badge ${statusBadge(escrow.status)}`}>
                   {statusLabel(escrow.status)}
                 </span>
-              </td>
-              <td className="px-5 py-4 text-right text-[12px] text-[var(--text-tertiary)]">
-                {new Date(escrow.deadline).toLocaleDateString(undefined, {
-                  month: "short",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </td>
+              </div>
+              <p className="text-[12px] text-[var(--text-tertiary)]">
+                {shortenAddress(escrow.client_address)} → {shortenAddress(escrow.provider_address)}
+              </p>
+            </div>
+            <div className="shrink-0 text-right">
+              <span className="font-mono text-[13px] font-medium text-white">
+                {formatAmount(escrow.amount)}
+              </span>
+              <span className="ml-1 text-[11px] text-[var(--text-tertiary)]">USDC</span>
+            </div>
+          </a>
+        ))}
+      </div>
+
+      {/* Desktop table view */}
+      <div className="hidden sm:block overflow-x-auto">
+        <table className="w-full text-[13px]">
+          <thead>
+            <tr className="border-b border-[var(--border)] text-left text-[11px] uppercase tracking-wider text-[var(--text-tertiary)]">
+              <th className="px-5 py-3.5 font-semibold">Escrow</th>
+              <th className="px-5 py-3.5 font-semibold hidden md:table-cell">Client</th>
+              <th className="px-5 py-3.5 font-semibold hidden md:table-cell">Provider</th>
+              <th className="px-5 py-3.5 font-semibold text-right">Amount</th>
+              <th className="px-5 py-3.5 font-semibold">Status</th>
+              <th className="px-5 py-3.5 font-semibold text-right hidden lg:table-cell">Deadline</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {escrows.map((escrow, i) => (
+              <tr
+                key={escrow.escrow_address}
+                className="group border-b border-[var(--border)] last:border-b-0 transition-colors hover:bg-[var(--surface-hover)] cursor-pointer"
+              >
+                <td className="px-5 py-4">
+                  <a
+                    href={`/escrows/${escrow.escrow_address}`}
+                    className="font-mono text-[12px] font-medium text-[var(--accent)] transition-colors hover:text-[var(--accent)] group-hover:underline underline-offset-2"
+                  >
+                    {shortenAddress(escrow.escrow_address, 6)}
+                  </a>
+                </td>
+                <td className="px-5 py-4 hidden md:table-cell">
+                  <span className="font-mono text-[12px] text-[var(--text-secondary)]">
+                    {shortenAddress(escrow.client_address)}
+                  </span>
+                </td>
+                <td className="px-5 py-4 hidden md:table-cell">
+                  <span className="font-mono text-[12px] text-[var(--text-secondary)]">
+                    {shortenAddress(escrow.provider_address)}
+                  </span>
+                </td>
+                <td className="px-5 py-4 text-right">
+                  <span className="font-mono text-[13px] font-medium text-white">
+                    {formatAmount(escrow.amount)}
+                  </span>
+                  <span className="ml-1 text-[11px] text-[var(--text-tertiary)]">
+                    USDC
+                  </span>
+                </td>
+                <td className="px-5 py-4">
+                  <span className={`badge ${statusBadge(escrow.status)}`}>
+                    {statusLabel(escrow.status)}
+                  </span>
+                </td>
+                <td className="px-5 py-4 text-right text-[12px] text-[var(--text-tertiary)] hidden lg:table-cell">
+                  {new Date(escrow.deadline).toLocaleDateString(undefined, {
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

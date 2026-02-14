@@ -145,7 +145,7 @@ export default async function AnalyticsPage() {
     <div className="space-y-12 animate-fade-up">
       {/* Header */}
       <div className="space-y-2">
-        <h1 className="text-[32px] font-extrabold tracking-tight text-white">Protocol Analytics</h1>
+        <h1 className="text-[24px] font-extrabold tracking-tight text-white sm:text-[32px]">Protocol Analytics</h1>
         <p className="text-[15px] text-[var(--text-secondary)]">
           Real-time metrics across Solana and Base. Updated every 60 seconds.
         </p>
@@ -184,7 +184,7 @@ export default async function AnalyticsPage() {
       </section>
 
       {/* ── npm Breakdown ── */}
-      <section className="glass glow-subtle rounded-2xl p-6 space-y-4">
+      <section className="glass glow-subtle rounded-2xl p-4 space-y-4 sm:p-6">
         <h2 className="text-[16px] font-bold text-white">npm Package Downloads</h2>
         <p className="text-[13px] text-[var(--text-tertiary)]">Monthly downloads from npm registry</p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -208,27 +208,27 @@ export default async function AnalyticsPage() {
       {/* ── Chain Comparison ── */}
       <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Solana */}
-        <div className="glass glow-subtle rounded-2xl p-6 space-y-5">
+        <div className="glass glow-subtle rounded-2xl p-4 space-y-5 sm:p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-[16px] font-bold text-white">Solana</h2>
             <ChainBadge chain="solana" />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-1">
-              <p className="text-[12px] text-[var(--text-tertiary)]">Escrows</p>
-              <p className="text-[24px] font-bold text-white">{solana.totalEscrows.toLocaleString()}</p>
+              <p className="text-[11px] text-[var(--text-tertiary)] sm:text-[12px]">Escrows</p>
+              <p className="text-[18px] font-bold text-white sm:text-[24px]">{solana.totalEscrows.toLocaleString()}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-[12px] text-[var(--text-tertiary)]">Volume</p>
-              <p className="text-[24px] font-bold text-white">${formatAmount(solana.totalVolume)}</p>
+              <p className="text-[11px] text-[var(--text-tertiary)] sm:text-[12px]">Volume</p>
+              <p className="text-[18px] font-bold text-white sm:text-[24px]">${formatAmount(solana.totalVolume)}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-[12px] text-[var(--text-tertiary)]">Completion Rate</p>
-              <p className="text-[24px] font-bold text-[var(--success)]">{solPerf.completionRate}%</p>
+              <p className="text-[11px] text-[var(--text-tertiary)] sm:text-[12px]">Completion Rate</p>
+              <p className="text-[18px] font-bold text-[var(--success)] sm:text-[24px]">{solPerf.completionRate}%</p>
             </div>
             <div className="space-y-1">
-              <p className="text-[12px] text-[var(--text-tertiary)]">Dispute Rate</p>
-              <p className="text-[24px] font-bold text-[var(--danger)]">{solPerf.disputeRate}%</p>
+              <p className="text-[11px] text-[var(--text-tertiary)] sm:text-[12px]">Dispute Rate</p>
+              <p className="text-[18px] font-bold text-[var(--danger)] sm:text-[24px]">{solPerf.disputeRate}%</p>
             </div>
           </div>
           <div className="space-y-2 text-[13px] text-[var(--text-secondary)]">
@@ -259,27 +259,27 @@ export default async function AnalyticsPage() {
         </div>
 
         {/* Base */}
-        <div className="glass glow-subtle rounded-2xl p-6 space-y-5">
+        <div className="glass glow-subtle rounded-2xl p-4 space-y-5 sm:p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-[16px] font-bold text-white">Base</h2>
             <ChainBadge chain="base" />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-1">
-              <p className="text-[12px] text-[var(--text-tertiary)]">Escrows</p>
-              <p className="text-[24px] font-bold text-white">{baseChain.totalEscrows.toLocaleString()}</p>
+              <p className="text-[11px] text-[var(--text-tertiary)] sm:text-[12px]">Escrows</p>
+              <p className="text-[18px] font-bold text-white sm:text-[24px]">{baseChain.totalEscrows.toLocaleString()}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-[12px] text-[var(--text-tertiary)]">Volume</p>
-              <p className="text-[24px] font-bold text-white">${formatAmount(baseChain.totalVolume)}</p>
+              <p className="text-[11px] text-[var(--text-tertiary)] sm:text-[12px]">Volume</p>
+              <p className="text-[18px] font-bold text-white sm:text-[24px]">${formatAmount(baseChain.totalVolume)}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-[12px] text-[var(--text-tertiary)]">Completion Rate</p>
-              <p className="text-[24px] font-bold text-[var(--success)]">{basePerf.completionRate}%</p>
+              <p className="text-[11px] text-[var(--text-tertiary)] sm:text-[12px]">Completion Rate</p>
+              <p className="text-[18px] font-bold text-[var(--success)] sm:text-[24px]">{basePerf.completionRate}%</p>
             </div>
             <div className="space-y-1">
-              <p className="text-[12px] text-[var(--text-tertiary)]">Dispute Rate</p>
-              <p className="text-[24px] font-bold text-[var(--danger)]">{basePerf.disputeRate}%</p>
+              <p className="text-[11px] text-[var(--text-tertiary)] sm:text-[12px]">Dispute Rate</p>
+              <p className="text-[18px] font-bold text-[var(--danger)] sm:text-[24px]">{basePerf.disputeRate}%</p>
             </div>
           </div>
           <div className="space-y-2 text-[13px] text-[var(--text-secondary)]">
@@ -319,10 +319,10 @@ export default async function AnalyticsPage() {
 
       {/* ── Weekly Trend (table) ── */}
       {analytics.weeklyTrend.length > 0 && (
-        <section className="glass glow-subtle rounded-2xl p-6 space-y-4">
+        <section className="glass glow-subtle rounded-2xl p-4 space-y-4 sm:p-6">
           <h2 className="text-[16px] font-bold text-white">Weekly Trend</h2>
           <p className="text-[13px] text-[var(--text-tertiary)]">Escrows created and volume per week (last 12 weeks)</p>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
             <table className="w-full text-left text-[13px]">
               <thead>
                 <tr className="border-b border-[var(--border)] text-[11px] uppercase tracking-wider text-[var(--text-tertiary)]">
@@ -349,10 +349,10 @@ export default async function AnalyticsPage() {
 
       {/* ── Daily Volume Sparkline (CSS bars) ── */}
       {analytics.dailyVolume.length > 0 && (
-        <section className="glass glow-subtle rounded-2xl p-6 space-y-4">
+        <section className="glass glow-subtle rounded-2xl p-4 space-y-4 sm:p-6">
           <h2 className="text-[16px] font-bold text-white">Daily Activity</h2>
           <p className="text-[13px] text-[var(--text-tertiary)]">Escrows created per day (last 30 days)</p>
-          <div className="flex items-end gap-1 h-32">
+          <div className="flex items-end gap-0.5 h-24 sm:gap-1 sm:h-32">
             {analytics.dailyVolume.map((d) => {
               const maxEscrows = Math.max(...analytics.dailyVolume.map((x) => x.escrows), 1);
               const pct = Math.max((d.escrows / maxEscrows) * 100, 2);
@@ -375,10 +375,10 @@ export default async function AnalyticsPage() {
 
       {/* ── Top Agents ── */}
       {analytics.topAgents.length > 0 && (
-        <section className="glass glow-subtle rounded-2xl p-6 space-y-4">
+        <section className="glass glow-subtle rounded-2xl p-4 space-y-4 sm:p-6">
           <h2 className="text-[16px] font-bold text-white">Top Agents</h2>
           <p className="text-[13px] text-[var(--text-tertiary)]">By total escrow volume</p>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
             <table className="w-full text-left text-[13px]">
               <thead>
                 <tr className="border-b border-[var(--border)] text-[11px] uppercase tracking-wider text-[var(--text-tertiary)]">

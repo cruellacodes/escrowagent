@@ -95,11 +95,11 @@ export default async function EscrowDetailPage({
             </svg>
             Escrows
           </a>
-          <h1 className="text-[28px] font-bold tracking-tight">
+          <h1 className="text-[22px] font-bold tracking-tight sm:text-[28px]">
             Escrow Detail
           </h1>
-          <div className="flex items-center gap-3 flex-wrap">
-            <span className="rounded-lg bg-[var(--surface)] px-3 py-1.5 font-mono text-[12px] text-[var(--text-secondary)]">
+          <div className="flex items-center gap-2 flex-wrap sm:gap-3">
+            <span className="rounded-lg bg-[var(--surface)] px-2.5 py-1.5 font-mono text-[10px] text-[var(--text-secondary)] break-all sm:text-[12px] sm:px-3">
               {address}
             </span>
             <span className={`badge ${statusBadge(escrow.status)}`}>
@@ -127,9 +127,9 @@ export default async function EscrowDetailPage({
       </div>
 
       {/* Cards grid */}
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 animate-fade-up animate-delay-1">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 animate-fade-up animate-delay-1 sm:gap-5">
         {/* Participants */}
-        <div className="glass glow-subtle rounded-2xl p-6">
+        <div className="glass glow-subtle rounded-2xl p-4 sm:p-6">
           <div className="mb-4 flex items-center gap-2">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
@@ -144,7 +144,7 @@ export default async function EscrowDetailPage({
         </div>
 
         {/* Financials */}
-        <div className="glass glow-subtle rounded-2xl p-6">
+        <div className="glass glow-subtle rounded-2xl p-4 sm:p-6">
           <div className="mb-4 flex items-center gap-2">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
@@ -158,7 +158,7 @@ export default async function EscrowDetailPage({
         </div>
 
         {/* Timing */}
-        <div className="glass glow-subtle rounded-2xl p-6">
+        <div className="glass glow-subtle rounded-2xl p-4 sm:p-6">
           <div className="mb-4 flex items-center gap-2">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
@@ -174,7 +174,7 @@ export default async function EscrowDetailPage({
         </div>
 
         {/* Task */}
-        <div className="glass glow-subtle rounded-2xl p-6">
+        <div className="glass glow-subtle rounded-2xl p-4 sm:p-6">
           <div className="mb-4 flex items-center gap-2">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" />
@@ -202,7 +202,7 @@ export default async function EscrowDetailPage({
 
       {/* Proofs */}
       {escrow.proofs && escrow.proofs.length > 0 && (
-        <div className="glass glow-subtle animate-fade-up animate-delay-2 rounded-2xl p-6 space-y-4">
+        <div className="glass glow-subtle animate-fade-up animate-delay-2 rounded-2xl p-4 space-y-4 sm:p-6">
           <div className="flex items-center gap-2">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />

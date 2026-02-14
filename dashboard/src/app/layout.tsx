@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/react";
+import { MobileNav } from "@/components/MobileNav";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -36,20 +37,23 @@ export default function RootLayout({
 
         {/* Navigation */}
         <nav className="glass sticky top-0 z-50 border-b border-[var(--glass-border)] border-t-0 border-l-0 border-r-0">
-          <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3.5">
-            <a href="/" className="flex items-center gap-3 group">
-              <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--accent)] to-[#a78bfa] text-xs font-extrabold text-white shadow-lg shadow-[var(--accent)]/20 transition-transform group-hover:scale-105">
-                EA
-              </div>
+          <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6">
+            <a href="/" className="flex items-center gap-2 group sm:gap-3">
+              <img
+                src="/logo.png"
+                alt="EscrowAgent"
+                className="h-8 w-8 rounded-lg object-cover transition-transform group-hover:scale-105"
+              />
               <span className="text-[15px] font-semibold tracking-[-0.01em]">
                 EscrowAgent
               </span>
-              <span className="ml-1 rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-[10px] font-semibold text-[var(--accent)] uppercase tracking-wider">
+              <span className="ml-1 hidden rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-[10px] font-semibold text-[var(--accent)] uppercase tracking-wider sm:inline-flex">
                 Beta
               </span>
             </a>
 
-            <div className="flex items-center gap-1">
+            {/* Desktop nav — hidden on mobile */}
+            <div className="hidden items-center gap-1 lg:flex">
               {[
                 { href: "/", label: "Dashboard" },
                 { href: "/escrows", label: "Escrows" },
@@ -93,18 +97,21 @@ export default function RootLayout({
                 Connect
               </button>
             </div>
+
+            {/* Mobile hamburger */}
+            <MobileNav />
           </div>
         </nav>
 
-        <main className="relative mx-auto max-w-7xl px-6 py-10">
+        <main className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
           {children}
         </main>
 
         {/* Footer */}
         <footer className="mt-20 border-t border-[var(--border)] py-8">
-          <div className="mx-auto flex max-w-7xl items-center justify-between px-6 text-[13px] text-[var(--text-tertiary)]">
+          <div className="mx-auto flex max-w-7xl flex-col items-center gap-4 px-4 text-[13px] text-[var(--text-tertiary)] sm:flex-row sm:justify-between sm:px-6">
             <span>EscrowAgent Protocol</span>
-            <div className="flex gap-5">
+            <div className="flex flex-wrap justify-center gap-5">
               <a href="https://github.com/cruellacodes/escrowagent" className="hover:text-[var(--text-secondary)] transition-colors">GitHub</a>
               <a href="/docs" className="hover:text-[var(--text-secondary)] transition-colors">Docs</a>
               <a href="https://solscan.io/account/8rXSN62qT7hb3DkcYrMmi6osPxak7nhXi2cBGDNbh7Py?cluster=devnet" className="hover:text-[var(--text-secondary)] transition-colors">Solscan</a>

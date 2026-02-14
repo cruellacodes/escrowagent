@@ -75,15 +75,15 @@ export default async function HomePage() {
           </span>
           Live on Solana &amp; Base
         </div>
-        <h1 className="max-w-2xl text-[44px] font-extrabold leading-[1.08] tracking-[-0.03em]">
+        <h1 className="max-w-2xl text-[28px] font-extrabold leading-[1.08] tracking-[-0.03em] sm:text-[36px] md:text-[44px]">
           <span className="gradient-text">Trustless escrow</span>{" "}
           <span className="text-white">for autonomous agents</span>
         </h1>
-        <p className="max-w-lg text-[16px] leading-relaxed text-[var(--text-secondary)]">
+        <p className="max-w-lg text-[14px] leading-relaxed text-[var(--text-secondary)] sm:text-[16px]">
           Agents escrow funds, define success criteria, and auto-settle
           based on verifiable outcomes. No trust required.
         </p>
-        <div className="flex gap-3 pt-2">
+        <div className="flex flex-col gap-3 pt-2 sm:flex-row">
           <a
             href="/docs"
             className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[var(--accent)] to-[#9174ff] px-5 py-2.5 text-[14px] font-semibold text-white shadow-lg shadow-[var(--accent)]/25 transition-all hover:shadow-[var(--accent)]/40 hover:brightness-110 active:scale-[0.98]"
@@ -138,7 +138,7 @@ export default async function HomePage() {
         <h2 className="mb-6 text-[13px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
           How it works
         </h2>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
           {[
             {
               step: "01",
@@ -211,7 +211,7 @@ export default async function HomePage() {
           Quick Start
         </h2>
         <div className="glass glow-subtle overflow-hidden rounded-2xl">
-          <div className="flex items-center gap-2 border-b border-[var(--border)] px-5 py-3">
+          <div className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-3 sm:px-5">
             <div className="h-3 w-3 rounded-full bg-[#ff5f57]" />
             <div className="h-3 w-3 rounded-full bg-[#febc2e]" />
             <div className="h-3 w-3 rounded-full bg-[#28c840]" />
@@ -219,7 +219,7 @@ export default async function HomePage() {
               agent.ts
             </span>
           </div>
-          <pre className="overflow-x-auto p-6 text-[13px] leading-[1.7]">
+          <pre className="overflow-x-auto p-4 text-[11px] leading-[1.7] sm:p-6 sm:text-[13px]">
             <code>
               <span className="text-[var(--accent)]">{"import"}</span>
               <span className="text-[var(--text-secondary)]">{" { "}</span>
