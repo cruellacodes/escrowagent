@@ -36,3 +36,6 @@ npm-debug.log*
 # Coverage
 coverage/
 .nyc_output/
+
+# Internal security docs (private — do not publish)
+docs/INTERNAL_SECURITY_AUDIT.md
