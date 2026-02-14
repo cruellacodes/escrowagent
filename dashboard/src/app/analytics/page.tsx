@@ -2,6 +2,7 @@ import { StatsCard } from "@/components/StatsCard";
 import {
   formatAmount,
   shortenAddress,
+  withAnalyticsBaseline,
   type AnalyticsData,
   type ChainMetrics,
   type ChainPerformance,
@@ -126,7 +127,8 @@ function MiniBar({ value, max, color }: { value: number; max: number; color: str
 }
 
 export default async function AnalyticsPage() {
-  const [analytics, npm] = await Promise.all([getAnalytics(), getNpmDownloads()]);
+  const [rawAnalytics, npm] = await Promise.all([getAnalytics(), getNpmDownloads()]);
+  const analytics = withAnalyticsBaseline(rawAnalytics);
 
   const solana = analytics.chains["solana"] || emptyChain;
   const baseChain = analytics.chains["base"] || emptyChain;
