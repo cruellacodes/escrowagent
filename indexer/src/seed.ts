@@ -70,11 +70,11 @@ function randInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-/** Date N days ago */
-function daysAgo(n: number): Date {
+/** Last night (Feb 13 evening) with a random time between 7pm–11pm */
+function lastNight(): Date {
   const d = new Date();
-  d.setDate(d.getDate() - n);
-  d.setHours(randInt(8, 22), randInt(0, 59), randInt(0, 59));
+  d.setDate(d.getDate() - 1);
+  d.setHours(randInt(19, 23), randInt(0, 59), randInt(0, 59), 0);
   return d;
 }
 
@@ -87,38 +87,37 @@ interface SeedEscrow {
   amount: number;       // raw (6 decimals)
   status: string;
   taskIdx: number;
-  daysAgo: number;      // when created
-  completedDaysAgo?: number;
+  completed: boolean;   // whether completed_at should be set
 }
 
 const SEED_ESCROWS: SeedEscrow[] = [
   // Completed (14)
-  { escrow_address: "1001", client: AGENTS[0], provider: AGENTS[1], amount: 500_000_000,   status: "Completed", taskIdx: 0,  daysAgo: 28, completedDaysAgo: 27 },
-  { escrow_address: "1002", client: AGENTS[2], provider: AGENTS[3], amount: 2_000_000_000, status: "Completed", taskIdx: 1,  daysAgo: 26, completedDaysAgo: 25 },
-  { escrow_address: "1003", client: AGENTS[0], provider: AGENTS[4], amount: 1_000_000_000, status: "Completed", taskIdx: 2,  daysAgo: 24, completedDaysAgo: 23 },
-  { escrow_address: "1004", client: AGENTS[5], provider: AGENTS[1], amount: 750_000_000,   status: "Completed", taskIdx: 3,  daysAgo: 22, completedDaysAgo: 21 },
-  { escrow_address: "1005", client: AGENTS[6], provider: AGENTS[7], amount: 150_000_000,   status: "Completed", taskIdx: 4,  daysAgo: 20, completedDaysAgo: 19 },
-  { escrow_address: "1006", client: AGENTS[3], provider: AGENTS[0], amount: 300_000_000,   status: "Completed", taskIdx: 5,  daysAgo: 18, completedDaysAgo: 17 },
-  { escrow_address: "1007", client: AGENTS[1], provider: AGENTS[5], amount: 2_500_000_000, status: "Completed", taskIdx: 6,  daysAgo: 16, completedDaysAgo: 14 },
-  { escrow_address: "1008", client: AGENTS[4], provider: AGENTS[2], amount: 100_000_000,   status: "Completed", taskIdx: 7,  daysAgo: 14, completedDaysAgo: 13 },
-  { escrow_address: "1009", client: AGENTS[7], provider: AGENTS[6], amount: 450_000_000,   status: "Completed", taskIdx: 8,  daysAgo: 12, completedDaysAgo: 11 },
-  { escrow_address: "1010", client: AGENTS[2], provider: AGENTS[0], amount: 800_000_000,   status: "Completed", taskIdx: 9,  daysAgo: 10, completedDaysAgo: 9 },
-  { escrow_address: "1011", client: AGENTS[5], provider: AGENTS[3], amount: 1_200_000_000, status: "Completed", taskIdx: 10, daysAgo: 8,  completedDaysAgo: 7 },
-  { escrow_address: "1012", client: AGENTS[0], provider: AGENTS[7], amount: 350_000_000,   status: "Completed", taskIdx: 11, daysAgo: 6,  completedDaysAgo: 5 },
-  { escrow_address: "1013", client: AGENTS[6], provider: AGENTS[4], amount: 2_000_000_000, status: "Completed", taskIdx: 12, daysAgo: 4,  completedDaysAgo: 3 },
-  { escrow_address: "1014", client: AGENTS[1], provider: AGENTS[2], amount: 600_000_000,   status: "Completed", taskIdx: 13, daysAgo: 2,  completedDaysAgo: 1 },
+  { escrow_address: "1001", client: AGENTS[0], provider: AGENTS[1], amount: 500_000_000,   status: "Completed", taskIdx: 0,  completed: true },
+  { escrow_address: "1002", client: AGENTS[2], provider: AGENTS[3], amount: 2_000_000_000, status: "Completed", taskIdx: 1,  completed: true },
+  { escrow_address: "1003", client: AGENTS[0], provider: AGENTS[4], amount: 1_000_000_000, status: "Completed", taskIdx: 2,  completed: true },
+  { escrow_address: "1004", client: AGENTS[5], provider: AGENTS[1], amount: 750_000_000,   status: "Completed", taskIdx: 3,  completed: true },
+  { escrow_address: "1005", client: AGENTS[6], provider: AGENTS[7], amount: 150_000_000,   status: "Completed", taskIdx: 4,  completed: true },
+  { escrow_address: "1006", client: AGENTS[3], provider: AGENTS[0], amount: 300_000_000,   status: "Completed", taskIdx: 5,  completed: true },
+  { escrow_address: "1007", client: AGENTS[1], provider: AGENTS[5], amount: 2_500_000_000, status: "Completed", taskIdx: 6,  completed: true },
+  { escrow_address: "1008", client: AGENTS[4], provider: AGENTS[2], amount: 100_000_000,   status: "Completed", taskIdx: 7,  completed: true },
+  { escrow_address: "1009", client: AGENTS[7], provider: AGENTS[6], amount: 450_000_000,   status: "Completed", taskIdx: 8,  completed: true },
+  { escrow_address: "1010", client: AGENTS[2], provider: AGENTS[0], amount: 800_000_000,   status: "Completed", taskIdx: 9,  completed: true },
+  { escrow_address: "1011", client: AGENTS[5], provider: AGENTS[3], amount: 1_200_000_000, status: "Completed", taskIdx: 10, completed: true },
+  { escrow_address: "1012", client: AGENTS[0], provider: AGENTS[7], amount: 350_000_000,   status: "Completed", taskIdx: 11, completed: true },
+  { escrow_address: "1013", client: AGENTS[6], provider: AGENTS[4], amount: 2_000_000_000, status: "Completed", taskIdx: 12, completed: true },
+  { escrow_address: "1014", client: AGENTS[1], provider: AGENTS[2], amount: 600_000_000,   status: "Completed", taskIdx: 13, completed: true },
 
   // Active (3)
-  { escrow_address: "1015", client: AGENTS[3], provider: AGENTS[5], amount: 1_500_000_000, status: "Active",    taskIdx: 14, daysAgo: 3 },
-  { escrow_address: "1016", client: AGENTS[7], provider: AGENTS[0], amount: 250_000_000,   status: "Active",    taskIdx: 15, daysAgo: 1 },
-  { escrow_address: "1017", client: AGENTS[4], provider: AGENTS[6], amount: 900_000_000,   status: "Active",    taskIdx: 16, daysAgo: 0 },
+  { escrow_address: "1015", client: AGENTS[3], provider: AGENTS[5], amount: 1_500_000_000, status: "Active",    taskIdx: 14, completed: false },
+  { escrow_address: "1016", client: AGENTS[7], provider: AGENTS[0], amount: 250_000_000,   status: "Active",    taskIdx: 15, completed: false },
+  { escrow_address: "1017", client: AGENTS[4], provider: AGENTS[6], amount: 900_000_000,   status: "Active",    taskIdx: 16, completed: false },
 
   // ProofSubmitted (1)
-  { escrow_address: "1018", client: AGENTS[2], provider: AGENTS[1], amount: 400_000_000,   status: "ProofSubmitted", taskIdx: 17, daysAgo: 2 },
+  { escrow_address: "1018", client: AGENTS[2], provider: AGENTS[1], amount: 400_000_000,   status: "ProofSubmitted", taskIdx: 17, completed: false },
 
   // Disputed (2)
-  { escrow_address: "1019", client: AGENTS[5], provider: AGENTS[4], amount: 1_800_000_000, status: "Disputed",  taskIdx: 18, daysAgo: 5 },
-  { escrow_address: "1020", client: AGENTS[0], provider: AGENTS[3], amount: 550_000_000,   status: "Disputed",  taskIdx: 19, daysAgo: 3 },
+  { escrow_address: "1019", client: AGENTS[5], provider: AGENTS[4], amount: 1_800_000_000, status: "Disputed",  taskIdx: 18, completed: false },
+  { escrow_address: "1020", client: AGENTS[0], provider: AGENTS[3], amount: 550_000_000,   status: "Disputed",  taskIdx: 19, completed: false },
 ];
 
 // ── Main ──
@@ -142,9 +141,9 @@ async function seed() {
   for (const e of SEED_ESCROWS) {
     const task = TASKS[e.taskIdx];
     const taskHash = fakeHash(`task-${e.taskIdx}-${task.desc}`);
-    const createdAt = daysAgo(e.daysAgo);
+    const createdAt = lastNight();
     const deadline = new Date(createdAt.getTime() + 7 * 24 * 60 * 60 * 1000); // +7 days
-    const completedAt = e.completedDaysAgo != null ? daysAgo(e.completedDaysAgo) : null;
+    const completedAt = e.completed ? lastNight() : null;
     const fakeTx = `0x${fakeHash(`tx-${e.escrow_address}`)}`;
 
     // Insert task
