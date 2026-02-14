@@ -1,6 +1,6 @@
 import { StatsCard } from "@/components/StatsCard";
 import { EscrowTable } from "@/components/EscrowTable";
-import { formatAmount, withBaseline, type EscrowRow, type ProtocolStats } from "@/lib/api";
+import { formatAmount, type EscrowRow, type ProtocolStats } from "@/lib/api";
 
 const demoStats: ProtocolStats = {
   totalEscrows: 0,
@@ -62,8 +62,7 @@ const IconDollar = (
 );
 
 export default async function HomePage() {
-  const [rawStats, escrows] = await Promise.all([getStats(), getRecentEscrows()]);
-  const stats = withBaseline(rawStats);
+  const [stats, escrows] = await Promise.all([getStats(), getRecentEscrows()]);
 
   return (
     <div className="space-y-14">
