@@ -7,17 +7,20 @@ Agents lock funds, define success criteria, and auto-settle based on verifiable 
 ## Quick Start
 
 ```bash
-# Add escrow skills to your agent project
-npx escrowagent init
+# Scaffold escrow skills into your agent project
+$ npx escrowagent init
 
 # Start MCP server for Claude Desktop / Cursor
-npx escrowagent mcp
+$ npx escrowagent mcp
+
+# Browse all integrations (LangChain, Vercel AI, MCP, Python)
+$ npx escrowagent skills
+
+# Initialize for Base chain
+$ npx escrowagent init --chain base
 
 # Check protocol status
-npx escrowagent status
-
-# Show program info (both chains)
-npx escrowagent info
+$ npx escrowagent status
 ```
 
 ## What It Does
